@@ -39,6 +39,10 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "[SkillBlink]")
 	void ClearBlinkAbility();
 	
+	/** Broadcasts the Blink ability activation event when input is started. */
+	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
+	void OnBlinkInputStarted();
+	
 	/*********************************************************************************************
 	 * Overrides
 	 ********************************************************************************************* */

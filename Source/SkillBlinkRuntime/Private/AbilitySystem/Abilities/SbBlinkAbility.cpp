@@ -8,4 +8,8 @@
 void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	
+	UE_LOG(LogTemp, Warning, TEXT("Blink ability activated"));
+	
+	K2_EndAbility();
 }

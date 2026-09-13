@@ -4,10 +4,12 @@
 
 // Sb
 #include "Data/SbDataAsset.h"
+#include "SbGameplayTags.h"
 
 // Bomber
 #include "DalSubsystem.h"
 #include "GameFramework/BmrPlayerState.h"
+#include "Subsystems/GlobalMessageSubsystem.h"
 
 // UE
 #include "AbilitySystemComponent.h"
@@ -74,6 +76,15 @@ void USbPlayerStateComponent::ClearBlinkAbility()
 	{
 		ASC.ClearAbility(Spec->Handle);
 	}
+}
+
+// Broadcasts the Blink ability activation event when input is started
+void USbPlayerStateComponent::OnBlinkInputStarted()
+{
+	FGameplayEventData EventData;
+	EventData.EventTag = SbGameplayTags::Event::BlinkActivated;
+	EventData.Instigator = GetOwner();
+	UGlobalMessageSubsystem::BroadcastGlobalMessage(EventData);
 }
 
 // Called when the owning Actor begins play or when the component is created if the Actor has already begun play
