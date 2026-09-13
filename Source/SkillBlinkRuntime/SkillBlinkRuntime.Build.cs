@@ -20,6 +20,8 @@ public class SkillBlinkRuntime : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new[]
 			{
 				"CoreUObject", "Engine", "Slate", "SlateCore" // Core
+				// Bomber modules
+				, "Bomber"
 			}
 		);
 	}
