@@ -45,6 +45,7 @@ ABmrPlayerState& USbPlayerStateComponent::GetPlayerStateChecked() const
  * Main methods
  ********************************************************************************************* */
 
+// Gives the Blink ability to the owner's ASC
 void USbPlayerStateComponent::GiveBlinkAbility()
 {
 	if (!GetOwner()->HasAuthority())
@@ -61,6 +62,7 @@ void USbPlayerStateComponent::GiveBlinkAbility()
 	});
 }
 
+// Clears the Blink ability from the owner's ASC
 void USbPlayerStateComponent::ClearBlinkAbility()
 {
 	if (!GetOwner()->HasAuthority())
