@@ -20,6 +20,7 @@ public class SkillBlinkRuntime : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new[]
 			{
 				"CoreUObject", "Engine", "Slate", "SlateCore" // Core
+				, "GameplayAbilities" // USbBlinkAbility
 				// Bomber modules
 				, "Bomber"
 			}
