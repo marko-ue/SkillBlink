@@ -23,9 +23,21 @@ public:
 	USbPlayerStateComponent();
 	
 	/** Returns Player State of this component. */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillDash]")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
 	class ABmrPlayerState* GetPlayerState() const;
 	ABmrPlayerState& GetPlayerStateChecked() const;
+	
+	/*********************************************************************************************
+	 * Main methods
+	 ********************************************************************************************* */
+public:
+	/** Grants the Blink ability to the owner's ASC. */
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "[SkillBlink]")
+	void GiveBlinkAbility();
+
+	/** Clears the Blink ability from the owner's ASC. */
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "[SkillBlink]")
+	void ClearBlinkAbility();
 	
 	/*********************************************************************************************
 	 * Overrides

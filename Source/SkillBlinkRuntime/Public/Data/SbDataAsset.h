@@ -23,7 +23,7 @@ public:
 	 ********************************************************************************************* */
 public:
 	/** Returns the Blink ability class. */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillDash]")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
 	FORCEINLINE TSubclassOf<class UGameplayAbility> GetBlinkAbilityClass() const { return BlinkAbilityClass; }
 	
 protected:
