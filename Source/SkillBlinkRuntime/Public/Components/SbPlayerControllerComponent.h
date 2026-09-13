@@ -1,4 +1,4 @@
-// Copyright (c) Yevhenii Selivanov
+// Copyright (c) Marko Petric & Yevhenii Selivanov
 
 #pragma once
 

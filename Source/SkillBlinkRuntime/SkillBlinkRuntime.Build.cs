@@ -24,6 +24,8 @@ public class SkillBlinkRuntime : ModuleRules
 				, "GameplayAbilities" // USbBlinkAbility
 				// Bomber modules
 				, "Bomber"
+				, "GameFeaturePluginsManager" // Used for GfpmUtils
+				, "MyUtils"
 			}
 		);
 	}

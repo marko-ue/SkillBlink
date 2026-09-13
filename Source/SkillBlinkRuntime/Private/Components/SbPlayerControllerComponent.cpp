@@ -1,9 +1,16 @@
-// Copyright (c) Yevhenii Selivanov
+// Copyright (c) Marko Petric & Yevhenii Selivanov
 
 #include "Components/SbPlayerControllerComponent.h"
 
+// Sb
+#include "Data/SbDataAsset.h"
+
 // Bomber
 #include "Controllers/BmrPlayerController.h"
+#include "DalSubsystem.h"
+#include "DataAssets/BmrInputMappingContext.h"
+#include "GfpmUtils.h"
+#include "MyUtilsLibraries/InputUtilsLibrary.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SbPlayerControllerComponent)
 
@@ -34,13 +41,29 @@ ABmrPlayerController& USbPlayerControllerComponent::GetPlayerControllerChecked()
 // Sets up the input context for SkillBlink for the player controller
 void USbPlayerControllerComponent::SetupBlinkInputContext() const
 {
-	//GetPlayerControllerChecked().SetupInputContexts()
+	// Lambda that sets up input contexts when the data asset becomes valid
+	UDalSubsystem::Get().ListenForDataAsset<USbDataAsset>(this, [this](const USbDataAsset& DA)
+	{
+		const TArray<const UBmrInputMappingContext*> Contexts = {DA.GetBlinkInputContext()};
+		GetPlayerControllerChecked().SetupInputContexts(Contexts);
+	});
 }
 
 // Removes the input context for SkillBlink from the player controller
 void USbPlayerControllerComponent::RemoveBlinkInputContextAndActions() const
 {
-	//GetPlayerControllerChecked().RemoveInputContexts()
+	ABmrPlayerController* MyPC = GetPlayerController();
+
+	const USbDataAsset* DataAsset = UDalSubsystem::GetDataAsset<USbDataAsset>();
+	UBmrInputMappingContext* BlinkContext = DataAsset ? DataAsset->GetBlinkInputContext() : nullptr;
+	if (MyPC && BlinkContext)
+	{
+		TArray<UInputAction*> ContextInputActions;
+		UInputUtilsLibrary::GetAllActionsInContext(MyPC, BlinkContext, EInputActionInContextState::Any, /*out*/ ContextInputActions);
+		UInputUtilsLibrary::UnbindInputActionsInContext(MyPC, BlinkContext);
+		UGfpmUtils::UnloadAssets(ContextInputActions);
+		MyPC->RemoveInputContexts({BlinkContext});
+	}
 }
 
 /*********************************************************************************************
@@ -63,9 +86,8 @@ void USbPlayerControllerComponent::OnUnregister()
 {
 	if (GetPlayerControllerChecked().IsLocalController())
 	{
-		SetupBlinkInputContext();
+		RemoveBlinkInputContextAndActions();
 	}
 	
 	Super::OnUnregister();
 }
-

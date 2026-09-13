@@ -19,6 +19,19 @@ public:
 	static const USbDataAsset& Get();
 	
 	/*********************************************************************************************
+	 * Input
+	 ********************************************************************************************* */
+public:
+	/** Returns the Blink input context. */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
+	FORCEINLINE class UBmrInputMappingContext* GetBlinkInputContext() const { return BlinkInputContext; }
+
+protected:
+	/** Input context for the Blink ability. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (BlueprintProtected, ShowOnlyInnerProperties))
+	TObjectPtr<class UBmrInputMappingContext> BlinkInputContext = nullptr;
+	
+	/*********************************************************************************************
 	 * Blink ability
 	 ********************************************************************************************* */
 public:
