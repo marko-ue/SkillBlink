@@ -34,12 +34,12 @@ void USbBlinkAbility::BroadcastBlinkResult(const FGameplayTag& FailureTag, const
 }
 
 // Executes the appropriate Blink cue depending on the tag passed in
-void USbBlinkAbility::ExecuteBlinkCue(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTag& CueTag) const
+void USbBlinkAbility::ExecuteBlinkCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayTag& CueTag) const
 {
-	if (ActorInfo->IsLocallyControlled())
+	if (ActorInfo.IsLocallyControlled())
 	{
 		const FGameplayCueParameters CueParams;
-		UGameplayCueManager::ExecuteGameplayCue_NonReplicated(ActorInfo->AvatarActor.Get(), CueTag, CueParams);
+		UGameplayCueManager::ExecuteGameplayCue_NonReplicated(ActorInfo.AvatarActor.Get(), CueTag, CueParams);
 	}
 }
 
@@ -88,7 +88,7 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	if (!TargetCell.IsValid())
 	{
 		BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
-		ExecuteBlinkCue(ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
+		ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
 		K2_EndAbility();
 		return;
 	}
@@ -97,7 +97,7 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	if (UBmrCellUtilsLibrary::IsCellHasAnyMatchingActor(TargetCell, TO_FLAG(EAT::Wall) | TO_FLAG(EAT::Box) | TO_FLAG(EAT::Bomb)))
 	{
 		BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_Occupied, AvatarPawn);
-		ExecuteBlinkCue(ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
+		ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
 		K2_EndAbility();
 		return;
 	}
@@ -105,7 +105,7 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	// Teleport (blink) the player to the blink target location, broadcast blink succeeded, and execute blink succeeded cue
 	MoverComp->TeleportToLocation(TargetCell.Location);
 	BroadcastBlinkResult(SbGameplayTags::Event::BlinkSucceeded, AvatarPawn);
-	ExecuteBlinkCue(ActorInfo, SbGameplayTags::GameplayCue::BlinkSucceeded);
+	ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkSucceeded);
 
 	// Ability only commits its cooldown if the teleportation succeeded
 	CommitAbilityCooldown(Handle, ActorInfo, ActivationInfo, false);
