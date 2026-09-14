@@ -10,7 +10,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SbBlinkAbility)
 
-// 1.5f is a bias that pushes the target vector far enough to SnapVectorOnLevel picks the cell ahead of the player
+// 1.5f is a bias that pushes the target vector far enough so SnapVectorOnLevel picks the cell ahead of the player
 static constexpr float BlinkSnapBias = 1.5f;
 
 /*********************************************************************************************
