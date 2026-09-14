@@ -23,6 +23,7 @@ public class SkillBlinkRuntime : ModuleRules
 				"CoreUObject", "Engine", "Slate", "SlateCore" // Core
 				, "GameplayAbilities" // USbBlinkAbility
 				, "GameplayTags" // FGameplayTag
+				, "Mover" // Used for blink teleportation
 				// Bomber modules
 				, "Bomber"
 				, "GameFeaturePluginsManager" // Used for GfpmUtils
