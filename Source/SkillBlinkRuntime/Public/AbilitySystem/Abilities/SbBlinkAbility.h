@@ -18,12 +18,16 @@ class SKILLBLINKRUNTIME_API USbBlinkAbility : public UGameplayAbility
 	 * Main methods
 	 ********************************************************************************************* */
 protected:
+	/** Broadcasts the Blink ability result after activation. */
 	void BroadcastBlinkResult(const FGameplayTag& FailureTag, const AActor* Instigator);
 	
 	/*********************************************************************************************
 	 * Overrides
 	 ********************************************************************************************* */
 protected:
+	/** Is overridden to prevent event-based activation if there is no cooldown GE set. */
+	virtual bool ShouldAbilityRespondToEvent(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayEventData* TriggerEventData) const override;
+	
 	/** Actually activate ability, do not call this directly. */
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 };

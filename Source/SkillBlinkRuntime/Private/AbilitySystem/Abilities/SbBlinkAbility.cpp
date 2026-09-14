@@ -19,6 +19,7 @@ static constexpr float BlinkSnapBias = 1.5f;
  * Main methods
  ********************************************************************************************* */
 
+// Broadcasts the Blink ability result after activation
 void USbBlinkAbility::BroadcastBlinkResult(const FGameplayTag& FailureTag, const AActor* Instigator)
 {
 	FGameplayEventData EventData;
@@ -30,6 +31,13 @@ void USbBlinkAbility::BroadcastBlinkResult(const FGameplayTag& FailureTag, const
 /*********************************************************************************************
  * Overrides
  ********************************************************************************************* */
+
+// Is overridden to prevent event-based activation if there is no cooldown GE set
+bool USbBlinkAbility::ShouldAbilityRespondToEvent(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayEventData* TriggerEventData) const
+{
+	return Super::ShouldAbilityRespondToEvent(ActorInfo, TriggerEventData)
+		   && ensureMsgf(GetCooldownGameplayEffect(), TEXT("ASSERT: [%i] %hs:\n'CooldownGE' is null!"), __LINE__, __FUNCTION__);
+}
 
 // Actually activate ability, do not call this directly
 void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -81,9 +89,8 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	MoverComp->TeleportToLocation(TargetCell.Location);
 	BroadcastBlinkResult(SbGameplayTags::Event::BlinkSucceeded, AvatarPawn);
 
-	// Ability only commits its cost if the teleportation succeeded
-	// TODO: Replace with clearing the ability spec once the pickup for the ability is implemented
-	CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
+	// Ability only commits its cooldown if the teleportation succeeded
+	CommitAbilityCooldown(Handle, ActorInfo, ActivationInfo, false);
 
 	K2_EndAbility();
 }

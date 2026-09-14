@@ -16,4 +16,9 @@ namespace SbGameplayTags
 		UE_DEFINE_GAMEPLAY_TAG_COMMENT(BlinkFailed_Occupied, "Event.SkillBlink.BlinkFailed.Occupied", "Event that fires when a Blink fails because of an occupied cell");
 		UE_DEFINE_GAMEPLAY_TAG_COMMENT(BlinkFailed_InvalidCell, "Event.SkillBlink.BlinkFailed.InvalidCell", "Event that fires when a Blink fails because a cell is invalid");
 	} // namespace Event
+	
+	namespace GameplayEffect
+	{
+		UE_DEFINE_GAMEPLAY_TAG_COMMENT(BlinkCooldown, "GameplayEffect.SkillBlink.BlinkCooldown", "Tag for the cooldown of the Blink ability");
+	} // namespace GameplayEffect
 } // namespace SbGameplayTags
