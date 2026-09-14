@@ -21,6 +21,9 @@ protected:
 	/** Broadcasts the Blink ability result after activation. */
 	void BroadcastBlinkResult(const FGameplayTag& FailureTag, const AActor* Instigator);
 	
+	/** Executes the appropriate Blink cue depending on the tag passed in. */
+	void ExecuteBlinkCue(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTag& CueTag) const;
+
 	/*********************************************************************************************
 	 * Overrides
 	 ********************************************************************************************* */

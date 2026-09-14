@@ -24,4 +24,10 @@ namespace SbGameplayTags
 	{
 		SKILLBLINKRUNTIME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BlinkCooldown);
 	} // namespace GameplayEffect
+	
+	namespace GameplayCue
+	{
+		SKILLBLINKRUNTIME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BlinkSucceeded);
+		SKILLBLINKRUNTIME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BlinkFailed);
+	} // namespace GameplayCue
 } // namespace SbGameplayTags

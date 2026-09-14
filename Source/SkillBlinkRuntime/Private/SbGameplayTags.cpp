@@ -21,4 +21,10 @@ namespace SbGameplayTags
 	{
 		UE_DEFINE_GAMEPLAY_TAG_COMMENT(BlinkCooldown, "GameplayEffect.SkillBlink.BlinkCooldown", "Tag for the cooldown of the Blink ability");
 	} // namespace GameplayEffect
+	
+	namespace GameplayCue
+	{
+		UE_DEFINE_GAMEPLAY_TAG_COMMENT(BlinkSucceeded, "GameplayCue.SkillBlink.BlinkSucceeded", "Local Blink SFX played when the Blink succeeds");
+		UE_DEFINE_GAMEPLAY_TAG_COMMENT(BlinkFailed, "GameplayCue.SkillBlink.BlinkFailed", "Local Blink SFX played when the Blink fails");
+	} // namespace GameplayCue
 } // namespace SbGameplayTags
