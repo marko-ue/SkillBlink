@@ -21,6 +21,7 @@ public class SkillBlinkRuntime : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new[]
 			{
 				"CoreUObject", "Engine", "Slate", "SlateCore" // Core
+				, "UMG" // UUserWidget creation
 				, "GameplayAbilities" // USbBlinkAbility
 				, "GameplayTags" // FGameplayTag
 				, "Mover" // Used for blink teleportation

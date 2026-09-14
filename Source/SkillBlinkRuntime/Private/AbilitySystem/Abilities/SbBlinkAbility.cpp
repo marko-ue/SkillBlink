@@ -6,12 +6,26 @@
 #include "Actors/BmrPawn.h"
 #include "Bomber.h"
 #include "Components/BmrMoverComponent.h"
+#include "SbGameplayTags.h"
+#include "Subsystems/GlobalMessageSubsystem.h"
 #include "UtilityLibraries/BmrCellUtilsLibrary.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SbBlinkAbility)
 
 // 1.5f is a bias that pushes the target vector far enough so SnapVectorOnLevel picks the cell ahead of the player
 static constexpr float BlinkSnapBias = 1.5f;
+
+/*********************************************************************************************
+ * Main methods
+ ********************************************************************************************* */
+
+void USbBlinkAbility::BroadcastBlinkResult(const FGameplayTag& FailureTag, const AActor* Instigator)
+{
+	FGameplayEventData EventData;
+	EventData.EventTag = FailureTag;
+	EventData.Instigator = Instigator;
+	UGlobalMessageSubsystem::BroadcastGlobalMessage(EventData);
+}
 
 /*********************************************************************************************
  * Overrides
@@ -47,19 +61,29 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	// Initializes the FBmrCell struct with a snap to the nearest cell in that blink target location
 	const FBmrCell TargetCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(BlinkTargetLocation);
 	
-	// End ability and allow another attempt if the target cell after blinking is not valid or if the target cell is occupied by a wall, box or bomb
-	if (!TargetCell.IsValid() || UBmrCellUtilsLibrary::IsCellHasAnyMatchingActor(TargetCell, TO_FLAG(EAT::Wall) | TO_FLAG(EAT::Box) | TO_FLAG(EAT::Bomb)))
+	// Broadcast Blink failure reason, end ability and allow another attempt if the target cell is not valid
+	if (!TargetCell.IsValid())
 	{
+		BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
 		K2_EndAbility();
 		return;
 	}
 
-	// Teleport (blink) the player to the blink target location
+	// Broadcast Blink failure reason, end ability and allow another attempt if the target cell is occupied by a wall, box or bomb
+	if (UBmrCellUtilsLibrary::IsCellHasAnyMatchingActor(TargetCell, TO_FLAG(EAT::Wall) | TO_FLAG(EAT::Box) | TO_FLAG(EAT::Bomb)))
+	{
+		BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_Occupied, AvatarPawn);
+		K2_EndAbility();
+		return;
+	}
+
+	// Teleport (blink) the player to the blink target location and broadcast blink succeeded
 	MoverComp->TeleportToLocation(TargetCell.Location);
+	BroadcastBlinkResult(SbGameplayTags::Event::BlinkSucceeded, AvatarPawn);
 
 	// Ability only commits its cost if the teleportation succeeded
 	// TODO: Replace with clearing the ability spec once the pickup for the ability is implemented
 	CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
-    
+
 	K2_EndAbility();
 }

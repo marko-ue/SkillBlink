@@ -7,8 +7,16 @@
 
 namespace SbGameplayTags
 {
+	namespace UI
+	{
+		SKILLBLINKRUNTIME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Widget_BlinkResult);
+	} // namespace UI
+	
 	namespace Event
 	{
 		SKILLBLINKRUNTIME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BlinkActivated);
+		SKILLBLINKRUNTIME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BlinkSucceeded);
+		SKILLBLINKRUNTIME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BlinkFailed_Occupied);
+		SKILLBLINKRUNTIME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BlinkFailed_InvalidCell);
 	} // namespace Event
 } // namespace SbGameplayTags

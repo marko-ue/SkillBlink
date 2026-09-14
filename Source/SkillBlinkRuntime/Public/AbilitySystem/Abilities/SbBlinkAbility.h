@@ -15,6 +15,12 @@ class SKILLBLINKRUNTIME_API USbBlinkAbility : public UGameplayAbility
 	GENERATED_BODY()
 	
 	/*********************************************************************************************
+	 * Main methods
+	 ********************************************************************************************* */
+protected:
+	void BroadcastBlinkResult(const FGameplayTag& FailureTag, const AActor* Instigator);
+	
+	/*********************************************************************************************
 	 * Overrides
 	 ********************************************************************************************* */
 protected:
