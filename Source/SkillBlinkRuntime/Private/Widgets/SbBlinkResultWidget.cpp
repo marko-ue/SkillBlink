@@ -55,7 +55,7 @@ void USbBlinkResultWidget::OnBlinkResult_Implementation(const FGameplayEventData
 		BlinkResultText->SetVisibility(ESlateVisibility::Hidden);
 		return;
 	}
-
+	
 	FText FailureReason;
 	if (Payload.EventTag == SbGameplayTags::Event::BlinkFailed_InvalidCell)
 	{
@@ -66,6 +66,12 @@ void USbBlinkResultWidget::OnBlinkResult_Implementation(const FGameplayEventData
 		FailureReason = NSLOCTEXT("SkillBlink", "Occupied", "Cannot blink: cell is occupied");
 	}
 
+	// Update the text with the failure reason, show the text, and start playing the text fade out animation
 	BlinkResultText->SetText(FailureReason);
+	BlinkResultText->SetRenderOpacity(1.f);
 	BlinkResultText->SetVisibility(ESlateVisibility::Visible);
+	if (BlinkResultFadeOut)
+	{
+		PlayAnimation(BlinkResultFadeOut);
+	}
 }
