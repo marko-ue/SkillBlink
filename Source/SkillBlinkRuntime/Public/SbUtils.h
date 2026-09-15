@@ -13,7 +13,7 @@ UCLASS()
 class SKILLBLINKRUNTIME_API USbUtils : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-	
+
 	/*********************************************************************************************
 	 * Object getters
 	 ********************************************************************************************* */

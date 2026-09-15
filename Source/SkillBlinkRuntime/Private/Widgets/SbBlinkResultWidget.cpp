@@ -20,26 +20,26 @@
 // Called after the underlying slate widget is constructed
 void USbBlinkResultWidget::NativeConstruct()
 {
-    Super::NativeConstruct();
+	Super::NativeConstruct();
 
-	// Bind all possible blink outcome events 
-    UGlobalMessageSubsystem::CallOrStartListeningForGlobalMessage(SbGameplayTags::Event::BlinkFailed_InvalidCell, this, &ThisClass::OnBlinkResult);
-    UGlobalMessageSubsystem::CallOrStartListeningForGlobalMessage(SbGameplayTags::Event::BlinkFailed_Occupied, this, &ThisClass::OnBlinkResult);
-    UGlobalMessageSubsystem::CallOrStartListeningForGlobalMessage(SbGameplayTags::Event::BlinkSucceeded, this, &ThisClass::OnBlinkResult);
+	// Bind all possible blink outcome events
+	UGlobalMessageSubsystem::CallOrStartListeningForGlobalMessage(SbGameplayTags::Event::BlinkFailed_InvalidCell, this, &ThisClass::OnBlinkResult);
+	UGlobalMessageSubsystem::CallOrStartListeningForGlobalMessage(SbGameplayTags::Event::BlinkFailed_Occupied, this, &ThisClass::OnBlinkResult);
+	UGlobalMessageSubsystem::CallOrStartListeningForGlobalMessage(SbGameplayTags::Event::BlinkSucceeded, this, &ThisClass::OnBlinkResult);
 
-    if (BlinkResultText)
-    {
-        BlinkResultText->SetVisibility(ESlateVisibility::Hidden);
-    }
+	if (BlinkResultText)
+	{
+		BlinkResultText->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 
 // Called when the widget is removed from the viewport
 void USbBlinkResultWidget::NativeDestruct()
 {
 	// Unbind from both events
-    UGlobalMessageSubsystem::StopListeningForAllGlobalMessages(this);
+	UGlobalMessageSubsystem::StopListeningForAllGlobalMessages(this);
 
-    Super::NativeDestruct();
+	Super::NativeDestruct();
 }
 
 /*********************************************************************************************
@@ -55,7 +55,7 @@ void USbBlinkResultWidget::OnBlinkResult_Implementation(const FGameplayEventData
 		BlinkResultText->SetVisibility(ESlateVisibility::Hidden);
 		return;
 	}
-	
+
 	FText FailureReason;
 	if (Payload.EventTag == SbGameplayTags::Event::BlinkFailed_InvalidCell)
 	{

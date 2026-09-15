@@ -63,13 +63,13 @@ void USbPlayerStateComponent::GiveBlinkAbility()
 			const FGameplayAbilitySpec AbilitySpec(DA.GetBlinkAbilityClass());
 			ASC.GiveAbility(AbilitySpec);
 		}
-		
+
 		// Adds the aura gameplay cue for the Blink ability
 		ASC.AddGameplayCue(SbGameplayTags::GameplayCue::BlinkAura, ASC.MakeEffectContext());
-		
+
 		// Registers a listener for the Blink cooldown tag to hide/show the aura
 		ASC.RegisterGameplayTagEvent(SbGameplayTags::GameplayEffect::BlinkCooldown, EGameplayTagEventType::NewOrRemoved)
-			.AddUObject(this, &ThisClass::OnCooldownTagChanged);
+		    .AddUObject(this, &ThisClass::OnCooldownTagChanged);
 	});
 }
 
@@ -90,10 +90,10 @@ void USbPlayerStateComponent::ClearBlinkAbility()
 
 	// Removes the aura gameplay cue for the Blink ability
 	ASC.RemoveGameplayCue(SbGameplayTags::GameplayCue::BlinkAura);
-	
+
 	// Unregisters the Blink cooldown gameplay tag event
 	ASC.RegisterGameplayTagEvent(SbGameplayTags::GameplayEffect::BlinkCooldown, EGameplayTagEventType::NewOrRemoved)
-		.RemoveAll(this);
+	    .RemoveAll(this);
 }
 
 // Broadcasts the Blink ability activation event when input is started
@@ -113,7 +113,7 @@ void USbPlayerStateComponent::OnBlinkInputStarted()
 void USbPlayerStateComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	GiveBlinkAbility();
 }
 
@@ -121,7 +121,7 @@ void USbPlayerStateComponent::BeginPlay()
 void USbPlayerStateComponent::OnUnregister()
 {
 	ClearBlinkAbility();
-	
+
 	Super::OnUnregister();
 }
 

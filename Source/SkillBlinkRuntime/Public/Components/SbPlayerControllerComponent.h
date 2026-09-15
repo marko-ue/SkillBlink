@@ -23,12 +23,12 @@ class SKILLBLINKRUNTIME_API USbPlayerControllerComponent : public UActorComponen
 public:
 	/** Default constructor. */
 	USbPlayerControllerComponent();
-	
+
 	/** Returns Player Controller of this component. */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
 	ABmrPlayerController* GetPlayerController() const;
 	ABmrPlayerController& GetPlayerControllerChecked() const;
-	
+
 	/*********************************************************************************************
 	 * Main methods
 	 ********************************************************************************************* */

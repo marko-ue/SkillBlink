@@ -29,7 +29,7 @@ public class SkillBlinkRuntime : ModuleRules
 				// Bomber modules
 				, "Bomber"
 				, "GameFeaturePluginsManager" // Used for GfpmUtils
-				, "MyUtils",
+				, "MyUtils"
 			}
 		);
 	}

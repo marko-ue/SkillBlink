@@ -88,6 +88,6 @@ void USbPlayerControllerComponent::OnUnregister()
 	{
 		RemoveBlinkInputContextAndActions();
 	}
-	
+
 	Super::OnUnregister();
 }

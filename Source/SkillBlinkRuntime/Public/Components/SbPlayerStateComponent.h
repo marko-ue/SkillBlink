@@ -21,12 +21,12 @@ class SKILLBLINKRUNTIME_API USbPlayerStateComponent : public UActorComponent
 public:
 	/** Default constructor. */
 	USbPlayerStateComponent();
-	
+
 	/** Returns Player State of this component. */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
 	class ABmrPlayerState* GetPlayerState() const;
 	ABmrPlayerState& GetPlayerStateChecked() const;
-	
+
 	/*********************************************************************************************
 	 * Main methods
 	 ********************************************************************************************* */
@@ -38,21 +38,21 @@ public:
 	/** Clears the Blink ability from the owner's ASC. */
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "[SkillBlink]")
 	void ClearBlinkAbility();
-	
+
 	/** Broadcasts the Blink ability activation event when input is started. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
 	void OnBlinkInputStarted();
-	
+
 	/*********************************************************************************************
 	 * Overrides
 	 ********************************************************************************************* */
 protected:
 	/** Called when the owning Actor begins play or when the component is created if the Actor has already begun play. */
 	virtual void BeginPlay() override;
-	
+
 	/** Clears all transient data created by this component. */
 	virtual void OnUnregister() override;
-	
+
 	/*********************************************************************************************
 	 * Events
 	 ********************************************************************************************* */

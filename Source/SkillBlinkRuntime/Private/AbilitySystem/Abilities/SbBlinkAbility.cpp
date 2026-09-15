@@ -54,14 +54,14 @@ void USbBlinkAbility::ExecuteBlinkCue(const FGameplayAbilityActorInfo& ActorInfo
 bool USbBlinkAbility::ShouldAbilityRespondToEvent(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayEventData* TriggerEventData) const
 {
 	return Super::ShouldAbilityRespondToEvent(ActorInfo, TriggerEventData)
-		   && ensureMsgf(GetCooldownGameplayEffect(), TEXT("ASSERT: [%i] %hs:\n'CooldownGE' is null!"), __LINE__, __FUNCTION__);
+	       && ensureMsgf(GetCooldownGameplayEffect(), TEXT("ASSERT: [%i] %hs:\n'CooldownGE' is null!"), __LINE__, __FUNCTION__);
 }
 
 // Actually activate ability, do not call this directly
 void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-    
+
 	const ABmrPawn* AvatarPawn = Cast<ABmrPawn>(ActorInfo->AvatarActor.Get());
 	if (!ensureMsgf(AvatarPawn, TEXT("ASSERT: [%i] %hs:\n'AvatarPawn' is null!"), __LINE__, __FUNCTION__))
 	{
@@ -78,15 +78,15 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	const FMoverDefaultSyncState* SyncState = MoverComp->GetSyncState().SyncStateCollection.FindDataByType<FMoverDefaultSyncState>();
 	const FVector InputIntent = SyncState ? SyncState->MoveDirectionIntent : FVector::ZeroVector;
 	const FVector BlinkDirection = InputIntent.SizeSquared() > KINDA_SMALL_NUMBER
-								 ? InputIntent.GetSafeNormal()
-								 : AvatarPawn->GetActorForwardVector();
+	                                   ? InputIntent.GetSafeNormal()
+	                                   : AvatarPawn->GetActorForwardVector();
 
 	// Location used to find the nearest grid cell to blink to
 	const FVector BlinkTargetLocation = AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * BlinkSnapBias);
-	
+
 	// Initializes the FBmrCell struct with a snap to the nearest cell in that blink target location
 	const FBmrCell TargetCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(BlinkTargetLocation);
-	
+
 	// Broadcast Blink failure reason, execute blink failed cue, and end ability and allow another attempt if the target cell is not valid
 	if (!TargetCell.IsValid())
 	{
@@ -109,7 +109,7 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	MoverComp->TeleportToLocation(TargetCell.Location);
 	BroadcastBlinkResult(SbGameplayTags::Event::BlinkSucceeded, AvatarPawn);
 	ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkSucceeded);
-	
+
 	// Spawn the portal niagara system at the player's current location and the target cell's location (the blink destination)
 	if (UNiagaraSystem* PortalNiagaraSystem = USbDataAsset::Get().GetPortalNiagaraSystem())
 	{

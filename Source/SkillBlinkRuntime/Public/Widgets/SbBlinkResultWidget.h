@@ -23,7 +23,7 @@ protected:
 	/** Text block for displaying the Blink result. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Transient, Category = "[SkillBlink]", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<UTextBlock> BlinkResultText = nullptr;
-	
+
 	/** Animation for fading out the blink result text. */
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
 	TObjectPtr<UWidgetAnimation> BlinkResultFadeOut = nullptr;
