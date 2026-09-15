@@ -3,6 +3,7 @@
 #include "AbilitySystem/Abilities/SbBlinkAbility.h"
 
 // Sb
+#include "Data/SbDataAsset.h"
 #include "SbGameplayTags.h"
 
 // Bomber
@@ -14,6 +15,8 @@
 
 // UE
 #include "GameplayCueManager.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SbBlinkAbility)
 
@@ -106,6 +109,13 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	MoverComp->TeleportToLocation(TargetCell.Location);
 	BroadcastBlinkResult(SbGameplayTags::Event::BlinkSucceeded, AvatarPawn);
 	ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkSucceeded);
+	
+	// Spawn the portal niagara system at the player's current location and the target cell's location (the blink destination)
+	if (UNiagaraSystem* PortalNiagaraSystem = USbDataAsset::Get().GetPortalNiagaraSystem())
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, PortalNiagaraSystem, AvatarPawn->GetActorLocation());
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, PortalNiagaraSystem, TargetCell.Location);
+	}
 
 	// Ability only commits its cooldown if the teleportation succeeded
 	CommitAbilityCooldown(Handle, ActorInfo, ActivationInfo, false);

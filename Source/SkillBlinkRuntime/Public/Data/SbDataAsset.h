@@ -43,4 +43,18 @@ protected:
 	/** The Blink ability class to grant to the player. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities", meta = (BlueprintProtected, ShowOnlyInnerProperties))
 	TSubclassOf<UGameplayAbility> BlinkAbilityClass = nullptr;
+	
+	/*********************************************************************************************
+	 * VFX
+	 ********************************************************************************************* */
+	
+public:
+	/** Returns the niagara system used by the Blink ability. */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
+	FORCEINLINE class UNiagaraSystem* GetPortalNiagaraSystem() const { return PortalNiagaraSystem; }
+	
+protected:
+	/** Niagara system (portal) used by the Blink ability. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VFX", meta = (BlueprintProtected, ShowOnlyInnerProperties))
+	TObjectPtr<UNiagaraSystem> PortalNiagaraSystem = nullptr;
 };

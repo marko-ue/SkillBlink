@@ -25,10 +25,11 @@ public class SkillBlinkRuntime : ModuleRules
 				, "GameplayAbilities" // USbBlinkAbility
 				, "GameplayTags" // FGameplayTag
 				, "Mover" // Used for blink teleportation
+				, "Niagara" // Used for blink portals
 				// Bomber modules
 				, "Bomber"
 				, "GameFeaturePluginsManager" // Used for GfpmUtils
-				, "MyUtils"
+				, "MyUtils",
 			}
 		);
 	}
