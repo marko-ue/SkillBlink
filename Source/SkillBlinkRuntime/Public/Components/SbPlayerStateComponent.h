@@ -52,4 +52,12 @@ protected:
 	
 	/** Clears all transient data created by this component. */
 	virtual void OnUnregister() override;
+	
+	/*********************************************************************************************
+	 * Events
+	 ********************************************************************************************* */
+protected:
+	/** Called when the cooldown tag for the Blink ability changes (when it goes on/off cooldown) */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "[SkillBlink]", meta = (BlueprintProtected))
+	void OnCooldownTagChanged(struct FGameplayTag Tag, int32 NewCount);
 };

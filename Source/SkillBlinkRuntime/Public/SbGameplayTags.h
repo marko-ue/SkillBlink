@@ -29,5 +29,6 @@ namespace SbGameplayTags
 	{
 		SKILLBLINKRUNTIME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BlinkSucceeded);
 		SKILLBLINKRUNTIME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BlinkFailed);
+		SKILLBLINKRUNTIME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BlinkAura);
 	} // namespace GameplayCue
 } // namespace SbGameplayTags

@@ -26,5 +26,6 @@ namespace SbGameplayTags
 	{
 		UE_DEFINE_GAMEPLAY_TAG_COMMENT(BlinkSucceeded, "GameplayCue.SkillBlink.BlinkSucceeded", "Local Blink SFX played when the Blink succeeds");
 		UE_DEFINE_GAMEPLAY_TAG_COMMENT(BlinkFailed, "GameplayCue.SkillBlink.BlinkFailed", "Local Blink SFX played when the Blink fails");
+		UE_DEFINE_GAMEPLAY_TAG_COMMENT(BlinkAura, "GameplayCue.SkillBlink.BlinkAura", "Blink aura VFX cue")
 	} // namespace GameplayCue
 } // namespace SbGameplayTags

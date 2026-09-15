@@ -53,31 +53,47 @@ void USbPlayerStateComponent::GiveBlinkAbility()
 		return;
 	}
 
-	// Lambda that gives the Blink ability when the data asset becomes valid
+	// Lambda that gives the Blink ability and adds the Blink aura when the data asset becomes valid
 	UDalSubsystem::Get().ListenForDataAsset<USbDataAsset>(this, [this](const USbDataAsset& DA)
 	{
 		UAbilitySystemComponent& ASC = GetPlayerStateChecked().GetAbilitySystemComponentChecked();
-		const FGameplayAbilitySpec AbilitySpec(DA.GetBlinkAbilityClass());
-		ASC.GiveAbility(AbilitySpec);
+
+		if (GetOwner()->HasAuthority())
+		{
+			const FGameplayAbilitySpec AbilitySpec(DA.GetBlinkAbilityClass());
+			ASC.GiveAbility(AbilitySpec);
+		}
+		
+		// Adds the aura gameplay cue for the Blink ability
+		ASC.AddGameplayCue(SbGameplayTags::GameplayCue::BlinkAura, ASC.MakeEffectContext());
+		
+		// Registers a listener for the Blink cooldown tag to hide/show the aura
+		ASC.RegisterGameplayTagEvent(SbGameplayTags::GameplayEffect::BlinkCooldown, EGameplayTagEventType::NewOrRemoved)
+			.AddUObject(this, &ThisClass::OnCooldownTagChanged);
 	});
 }
 
 // Clears the Blink ability from the owner's ASC
 void USbPlayerStateComponent::ClearBlinkAbility()
 {
-	if (!GetOwner()->HasAuthority())
-	{
-		return;
-	}
-
 	UAbilitySystemComponent& ASC = GetPlayerStateChecked().GetAbilitySystemComponentChecked();
 
-	const USbDataAsset* DataAsset = UDalSubsystem::GetDataAsset<USbDataAsset>();
-	const FGameplayAbilitySpec* Spec = DataAsset ? ASC.FindAbilitySpecFromClass(DataAsset->GetBlinkAbilityClass()) : nullptr;
-	if (Spec)
+	if (GetOwner()->HasAuthority())
 	{
-		ASC.ClearAbility(Spec->Handle);
+		const USbDataAsset* DataAsset = UDalSubsystem::GetDataAsset<USbDataAsset>();
+		const FGameplayAbilitySpec* Spec = DataAsset ? ASC.FindAbilitySpecFromClass(DataAsset->GetBlinkAbilityClass()) : nullptr;
+		if (Spec)
+		{
+			ASC.ClearAbility(Spec->Handle);
+		}
 	}
+
+	// Removes the aura gameplay cue for the Blink ability
+	ASC.RemoveGameplayCue(SbGameplayTags::GameplayCue::BlinkAura);
+	
+	// Unregisters the Blink cooldown gameplay tag event
+	ASC.RegisterGameplayTagEvent(SbGameplayTags::GameplayEffect::BlinkCooldown, EGameplayTagEventType::NewOrRemoved)
+		.RemoveAll(this);
 }
 
 // Broadcasts the Blink ability activation event when input is started
@@ -88,6 +104,10 @@ void USbPlayerStateComponent::OnBlinkInputStarted()
 	EventData.Instigator = GetOwner();
 	UGlobalMessageSubsystem::BroadcastGlobalMessage(EventData);
 }
+
+/*********************************************************************************************
+ * Overrides
+ ********************************************************************************************* */
 
 // Called when the owning Actor begins play or when the component is created if the Actor has already begun play
 void USbPlayerStateComponent::BeginPlay()
@@ -103,4 +123,26 @@ void USbPlayerStateComponent::OnUnregister()
 	ClearBlinkAbility();
 	
 	Super::OnUnregister();
+}
+
+/*********************************************************************************************
+ * Events
+ ********************************************************************************************* */
+
+// Called when the cooldown tag for the Blink ability changes (when it goes on/off cooldown)
+// TODO: Remove once pickup is implemented, cooldown won't exist since it will be a one-time use ability
+void USbPlayerStateComponent::OnCooldownTagChanged_Implementation(struct FGameplayTag Tag, int32 NewCount)
+{
+	UAbilitySystemComponent& ASC = GetPlayerStateChecked().GetAbilitySystemComponentChecked();
+
+	if (NewCount > 0)
+	{
+		// Cooldown started, hide the aura
+		ASC.RemoveGameplayCue(SbGameplayTags::GameplayCue::BlinkAura);
+	}
+	else
+	{
+		// Cooldown ended, show the aura
+		ASC.AddGameplayCue(SbGameplayTags::GameplayCue::BlinkAura, ASC.MakeEffectContext());
+	}
 }
