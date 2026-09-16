@@ -121,6 +121,9 @@ void USbPlayerStateComponent::BeginPlay()
 void USbPlayerStateComponent::OnUnregister()
 {
 	ClearBlinkAbility();
+	
+	UGlobalMessageSubsystem::ClearCachedMessages(SbGameplayTags::Event::BlinkActivated);
+	UGlobalMessageSubsystem::StopListeningForAllGlobalMessages(this);
 
 	Super::OnUnregister();
 }

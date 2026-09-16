@@ -36,7 +36,7 @@ void USbBlinkResultWidget::NativeConstruct()
 // Called when the widget is removed from the viewport
 void USbBlinkResultWidget::NativeDestruct()
 {
-	// Unbind from both events
+	// Unbind from all events
 	UGlobalMessageSubsystem::StopListeningForAllGlobalMessages(this);
 
 	Super::NativeDestruct();
