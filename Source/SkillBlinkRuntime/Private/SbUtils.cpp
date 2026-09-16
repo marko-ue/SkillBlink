@@ -11,6 +11,10 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SbUtils)
 
+/*********************************************************************************************
+ * Object getters
+ ********************************************************************************************* */
+
 // Returns Player State Component with a function to broadcast the ability's gameplay event
 USbPlayerStateComponent* USbUtils::GetPlayerStateComponent(const UObject* OptionalWorldContext)
 {

@@ -47,7 +47,6 @@ protected:
 	/*********************************************************************************************
 	 * VFX
 	 ********************************************************************************************* */
-
 public:
 	/** Returns the niagara system used by the Blink ability. */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
