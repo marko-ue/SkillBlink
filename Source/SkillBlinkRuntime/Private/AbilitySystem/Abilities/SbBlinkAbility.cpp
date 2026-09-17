@@ -83,7 +83,7 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	                                   : AvatarPawn->GetActorForwardVector();
 
 	// Location used to find the nearest grid cell to blink to
-	const FVector BlinkTargetLocation = AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * BlinkSnapBias);
+	const FVector BlinkTargetLocation = AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * (BlinkSnapBias + USbDataAsset::Get().GetBlinkExtraTiles()));
 
 	// Initializes the FBmrCell struct with a snap to the nearest cell in that blink target location
 	const FBmrCell TargetCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(BlinkTargetLocation);

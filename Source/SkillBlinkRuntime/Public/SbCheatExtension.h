@@ -17,4 +17,11 @@ UCLASS()
 class SKILLBLINKRUNTIME_API USbCheatExtension : public UMetaCheatManagerExtension
 {
 	GENERATED_BODY()
+	
+	/*********************************************************************************************
+	 * CVars
+	 ********************************************************************************************* */
+public:
+	/** Override the Blink extra tiles, where 0 is the minimum and 8 is the maximum. */
+	static TAutoConsoleVariable<int32> CVarBlinkExtraTiles;
 };

@@ -38,11 +38,19 @@ public:
 	/** Returns the Blink ability class. */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
 	FORCEINLINE TSubclassOf<class UGameplayAbility> GetBlinkAbilityClass() const { return BlinkAbilityClass; }
+	
+	/** Returns the Blink extra tiles. */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
+	int32 GetBlinkExtraTiles() const;
 
 protected:
 	/** The Blink ability class to grant to the player. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities", meta = (BlueprintProtected, ShowOnlyInnerProperties))
 	TSubclassOf<UGameplayAbility> BlinkAbilityClass = nullptr;
+	
+	/** How many extra tiles the Blink should do on top of the default 1 tile. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities", meta = (BlueprintProtected, ShowOnlyInnerProperties, ClampMin = "0", ClampMax = "8"))
+	int32 BlinkExtraTiles = 0;
 
 	/*********************************************************************************************
 	 * VFX
