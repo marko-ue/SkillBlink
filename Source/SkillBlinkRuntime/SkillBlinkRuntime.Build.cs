@@ -13,6 +13,7 @@ public class SkillBlinkRuntime : ModuleRules
 			{
 				"Core"
 				// Bomber modules
+				, "MetaCheatManager" // USbCheatExtension
 				, "DataAssetsLoader" // Created USbDataAsset
 			}
 		);
