@@ -7,8 +7,9 @@
 #include "SbBlinkAbility.generated.h"
 
 /**
- * Handles teleporting (blinking) the player
+ * Handles teleporting (blinking) the player in the direction of the player forward vector if standing still, otherwise in input direction
  * Players can blink through obstacles or in open space
+ * Ability is triggered by the SbGameplayTags::Event::BlinkActivated event
  */
 UCLASS()
 class SKILLBLINKRUNTIME_API USbBlinkAbility : public UGameplayAbility
