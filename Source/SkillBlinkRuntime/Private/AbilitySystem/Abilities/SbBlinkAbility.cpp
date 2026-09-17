@@ -21,6 +21,7 @@
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SbBlinkAbility)
 
 // 1.5f is a bias that pushes the target vector far enough so SnapVectorOnLevel picks the cell ahead of the player
+// It doesn't actually affect where the player is teleported, since the new cell's location is used directly when teleporting
 static constexpr float BlinkSnapBias = 1.5f;
 
 /*********************************************************************************************
@@ -86,8 +87,19 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 
 	// Initializes the FBmrCell struct with a snap to the nearest cell in that blink target location
 	const FBmrCell TargetCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(BlinkTargetLocation);
+	
+	// If the player is on the same cell as the blink destination cell, fail the blink
+	// This prevents the dash from succeeding if the player tries to blink out of bounds (map edge)
+	const FBmrCell PlayerCell = UBmrCellUtilsLibrary::SnapActorOnLevel(AvatarPawn);
+	if (TargetCell == PlayerCell)
+	{
+		BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
+		ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
+		K2_EndAbility();
+		return;
+	}
 
-	// Broadcast Blink failure reason, execute blink failed cue, and end ability and allow another attempt if the target cell is not valid
+	// Fail blink if the target cell is not valid
 	if (!TargetCell.IsValid())
 	{
 		BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
@@ -96,7 +108,7 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		return;
 	}
 
-	// Broadcast Blink failure reason, execute blink failed cue, and end ability and allow another attempt if the target cell is occupied by a wall, box or bomb
+	// Fail blink if the target cell is occupied by a wall, box or bomb
 	if (UBmrCellUtilsLibrary::IsCellHasAnyMatchingActor(TargetCell, TO_FLAG(EAT::Wall) | TO_FLAG(EAT::Box) | TO_FLAG(EAT::Bomb)))
 	{
 		BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_Occupied, AvatarPawn);
@@ -105,7 +117,7 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		return;
 	}
 
-	// Teleport (blink) the player to the blink target location, broadcast blink succeeded, and execute blink succeeded cue
+	// Teleport (blink) the player to the blink target location
 	MoverComp->TeleportToLocation(TargetCell.Location);
 	BroadcastBlinkResult(SbGameplayTags::Event::BlinkSucceeded, AvatarPawn);
 	ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkSucceeded);

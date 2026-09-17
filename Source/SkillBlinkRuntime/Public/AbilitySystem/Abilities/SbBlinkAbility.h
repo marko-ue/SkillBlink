@@ -7,7 +7,8 @@
 #include "SbBlinkAbility.generated.h"
 
 /**
- *
+ * Handles teleporting (blinking) the player
+ * Players can blink through obstacles or in open space
  */
 UCLASS()
 class SKILLBLINKRUNTIME_API USbBlinkAbility : public UGameplayAbility
