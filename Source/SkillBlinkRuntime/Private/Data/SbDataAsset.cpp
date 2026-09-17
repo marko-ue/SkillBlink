@@ -19,12 +19,26 @@ const USbDataAsset& USbDataAsset::Get()
 int32 USbDataAsset::GetBlinkExtraTiles() const
 {
 #if !UE_BUILD_SHIPPING
-	const float CvarBlinkExtraTiles = USbCheatExtension::CVarBlinkExtraTiles.GetValueOnAnyThread();
-	if (CvarBlinkExtraTiles >= 0.f)
+	const float CVarBlinkExtraTiles = USbCheatExtension::CVarBlinkExtraTiles.GetValueOnAnyThread();
+	if (CVarBlinkExtraTiles >= 0.f)
 	{
-		return CvarBlinkExtraTiles;
+		return CVarBlinkExtraTiles;
 	}
 #endif // !UE_BUILD_SHIPPING
 
 	return BlinkExtraTiles;
+}
+
+// Returns whether Blink range should be infinite (pass through all tiles)
+bool USbDataAsset::ShouldBlinkRangeBeInfinite() const
+{
+#if !UE_BUILD_SHIPPING
+	const bool CVarShouldBlinkRangeBeInfinite = USbCheatExtension::CVarShouldBlinkRangeBeInfinite.GetValueOnAnyThread();
+	if (CVarShouldBlinkRangeBeInfinite)
+	{
+		return CVarShouldBlinkRangeBeInfinite;
+	}
+#endif // !UE_BUILD_SHIPPING
+
+	return bShouldBlinkRangeBeInfinite;
 }

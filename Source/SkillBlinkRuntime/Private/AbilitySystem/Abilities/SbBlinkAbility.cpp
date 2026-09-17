@@ -24,6 +24,9 @@
 // It doesn't actually affect where the player is teleported, since the new cell's location is used directly when teleporting
 static constexpr float BlinkSnapBias = 1.5f;
 
+// This value is used directly if the ShouldBlinkRangeBeInfinite CVar is set to true to make the Blink have infinite range
+static constexpr int32 BlinkInfiniteRange = 8.f;
+
 /*********************************************************************************************
  * Main methods
  ********************************************************************************************* */
@@ -79,11 +82,18 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	const FMoverDefaultSyncState* SyncState = MoverComp->GetSyncState().SyncStateCollection.FindDataByType<FMoverDefaultSyncState>();
 	const FVector InputIntent = SyncState ? SyncState->MoveDirectionIntent : FVector::ZeroVector;
 	const FVector BlinkDirection = InputIntent.SizeSquared() > KINDA_SMALL_NUMBER
-	                                   ? InputIntent.GetSafeNormal()
-	                                   : AvatarPawn->GetActorForwardVector();
-
-	// Location used to find the nearest grid cell to blink to
-	const FVector BlinkTargetLocation = AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * (BlinkSnapBias + USbDataAsset::Get().GetBlinkExtraTiles()));
+									   ? InputIntent.GetSafeNormal()
+									   : AvatarPawn->GetActorForwardVector();
+	
+	// If the Blink range was set to be infinite, use the infinite range constexpr variable
+	// Otherwise, get the Blink extra tiles set in data asset, or CVar if set
+	const int32 BlinkExtraTiles = USbDataAsset::Get().ShouldBlinkRangeBeInfinite()
+							? BlinkInfiniteRange
+							: USbDataAsset::Get().GetBlinkExtraTiles();
+	
+	// Location used to find the nearest grid cell to blink to.
+	const FVector BlinkTargetLocation = 
+		AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * (BlinkSnapBias + BlinkExtraTiles));
 
 	// Initializes the FBmrCell struct with a snap to the nearest cell in that blink target location
 	const FBmrCell TargetCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(BlinkTargetLocation);

@@ -24,4 +24,7 @@ class SKILLBLINKRUNTIME_API USbCheatExtension : public UMetaCheatManagerExtensio
 public:
 	/** Override the Blink extra tiles, where 0 is the minimum and 8 is the maximum. */
 	static TAutoConsoleVariable<int32> CVarBlinkExtraTiles;
+	
+	/** Override whether the blink range should be infinite (pass through all tiles). */
+	static TAutoConsoleVariable<bool> CVarShouldBlinkRangeBeInfinite;
 };
