@@ -53,11 +53,11 @@ protected:
 	TSubclassOf<UGameplayAbility> BlinkAbilityClass = nullptr;
 	
 	/** How many extra tiles the Blink should do on top of the default 1 tile. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities", meta = (BlueprintProtected, ShowOnlyInnerProperties, ClampMin = "0", ClampMax = "8"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Blink Settings", meta = (BlueprintProtected, ShowOnlyInnerProperties, ClampMin = "0", ClampMax = "8"))
 	int32 BlinkExtraTiles = 0;
 	
 	/** Should Blink range be infinite (pass through all tiles). */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities", meta = (BlueprintProtected, ShowOnlyInnerProperties))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Blink Settings", meta = (BlueprintProtected, ShowOnlyInnerProperties))
 	bool bShouldBlinkRangeBeInfinite = false;
 
 	/*********************************************************************************************
