@@ -109,12 +109,18 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		// This prevents the blink from succeeding if the player tries to blink out of bounds (map edge)
 		if (CandidateCell == PlayerCell || !CandidateCell.IsValid())
 		{
+			BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
+			ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
+			K2_EndAbility();
 			continue;
 		}
 
 		// Skip if the target cell is occupied by a wall, box or bomb
 		if (UBmrCellUtilsLibrary::IsCellHasAnyMatchingActor(CandidateCell, TO_FLAG(EAT::Wall) | TO_FLAG(EAT::Box) | TO_FLAG(EAT::Bomb)))
 		{
+			BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_Occupied, AvatarPawn);
+			ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
+			K2_EndAbility();
 			continue;
 		}
 
