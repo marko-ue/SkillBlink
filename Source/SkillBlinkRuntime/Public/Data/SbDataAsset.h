@@ -41,7 +41,7 @@ public:
 	
 	/** Returns the Blink extra tiles. */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
-	int32 GetBlinkExtraTiles() const;
+	int32 GetBlinkTileRange() const;
 	
 	/** Returns whether Blink range should be infinite (pass through all tiles). */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
@@ -53,8 +53,8 @@ protected:
 	TSubclassOf<UGameplayAbility> BlinkAbilityClass = nullptr;
 	
 	/** How many extra tiles the Blink should do on top of the default 1 tile. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Blink Settings", meta = (BlueprintProtected, ShowOnlyInnerProperties, ClampMin = "0", ClampMax = "8"))
-	int32 BlinkExtraTiles = 0;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Blink Settings", meta = (BlueprintProtected, ShowOnlyInnerProperties, ClampMin = "1", ClampMax = "8"))
+	int32 BlinkTileRange = 1;
 	
 	/** Should Blink range be infinite (pass through all tiles). */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Blink Settings", meta = (BlueprintProtected, ShowOnlyInnerProperties))

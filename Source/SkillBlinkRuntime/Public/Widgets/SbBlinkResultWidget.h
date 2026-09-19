@@ -6,8 +6,6 @@
 
 #include "SbBlinkResultWidget.generated.h"
 
-class UTextBlock;
-
 /**
  * Displays the reason for a failed blink attempt.
  */
@@ -22,7 +20,7 @@ class SKILLBLINKRUNTIME_API USbBlinkResultWidget : public UUserWidget
 protected:
 	/** Text block for displaying the Blink result. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Transient, Category = "[SkillBlink]", meta = (BlueprintProtected, BindWidget))
-	TObjectPtr<UTextBlock> BlinkResultText = nullptr;
+	TObjectPtr<class UTextBlock> BlinkResultText = nullptr;
 
 	/** Animation for fading out the blink result text. */
 	UPROPERTY(Transient, meta = (BindWidgetAnim))

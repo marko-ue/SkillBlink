@@ -16,17 +16,17 @@ const USbDataAsset& USbDataAsset::Get()
 }
 
 // Returns Blink extra tiles from the CVar if set, otherwise default value from data asset
-int32 USbDataAsset::GetBlinkExtraTiles() const
+int32 USbDataAsset::GetBlinkTileRange() const
 {
 #if !UE_BUILD_SHIPPING
-	const float CVarBlinkExtraTiles = USbCheatExtension::CVarBlinkExtraTiles.GetValueOnAnyThread();
-	if (CVarBlinkExtraTiles >= 0.f)
+	const float CVarBlinkTileRange = USbCheatExtension::CVarBlinkTileRange.GetValueOnAnyThread();
+	if (CVarBlinkTileRange >= 0.f)
 	{
-		return CVarBlinkExtraTiles;
+		return CVarBlinkTileRange;
 	}
 #endif // !UE_BUILD_SHIPPING
 
-	return BlinkExtraTiles;
+	return BlinkTileRange;
 }
 
 // Returns whether Blink range should be infinite (pass through all tiles)

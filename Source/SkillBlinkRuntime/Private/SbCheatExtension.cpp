@@ -9,8 +9,8 @@
  ********************************************************************************************* */
 
 // Override the blink extra tiles of the Blink ability
-TAutoConsoleVariable<int32> USbCheatExtension::CVarBlinkExtraTiles(
-	TEXT("Bomber.SkillBlink.SetBlinkExtraTiles"),
+TAutoConsoleVariable<int32> USbCheatExtension::CVarBlinkTileRange(
+	TEXT("Bomber.SkillBlink.SetBlinkTileRange"),
 	-1,
 	TEXT("Override blink extra tiles, -1 uses default from data asset"),
 	ECVF_Cheat);
