@@ -38,6 +38,10 @@ public:
 	/** Clears the Blink ability from the owner's ASC. */
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "[SkillBlink]")
 	void ClearBlinkAbility();
+	
+	/** Clears the Blink ability's cooldown from the owner's ASC. */
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "[SkillBlink]")
+	void ClearBlinkCooldown() const;
 
 	/** Broadcasts the Blink ability activation event when input is started. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
@@ -60,4 +64,8 @@ protected:
 	/** Called when the cooldown tag for the Blink ability changes (when it goes on/off cooldown) */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "[SkillBlink]", meta = (BlueprintProtected))
 	void OnCooldownTagChanged(struct FGameplayTag Tag, int32 NewCount);
+	
+	/** Called when the current game state was changed. */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "[SkillBlink]", meta = (BlueprintProtected))
+	void OnGameStateChanged(const struct FGameplayEventData& Payload);
 };

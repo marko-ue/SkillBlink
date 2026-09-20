@@ -9,6 +9,7 @@
 // Bomber
 #include "DalSubsystem.h"
 #include "GameFramework/BmrPlayerState.h"
+#include "Structures/BmrGameplayTags.h"
 #include "Subsystems/GlobalMessageSubsystem.h"
 
 // UE
@@ -96,6 +97,27 @@ void USbPlayerStateComponent::ClearBlinkAbility()
 	    .RemoveAll(this);
 }
 
+// Clears the Blink ability's cooldown from the owner's ASC
+void USbPlayerStateComponent::ClearBlinkCooldown() const
+{
+	if (!GetOwner()->HasAuthority())
+	{
+		return;
+	}
+
+	UAbilitySystemComponent* ASC = &GetPlayerStateChecked().GetAbilitySystemComponentChecked();
+
+	// Return if there's no cooldown
+	if (!ASC->HasMatchingGameplayTag(SbGameplayTags::GameplayEffect::BlinkCooldown))
+	{
+		return;
+	}
+
+	FGameplayTagContainer CooldownTags;
+	CooldownTags.AddTag(SbGameplayTags::GameplayEffect::BlinkCooldown);
+	ASC->RemoveActiveEffectsWithGrantedTags(CooldownTags);
+}
+
 // Broadcasts the Blink ability activation event when input is started
 void USbPlayerStateComponent::OnBlinkInputStarted()
 {
@@ -115,6 +137,9 @@ void USbPlayerStateComponent::BeginPlay()
 	Super::BeginPlay();
 
 	GiveBlinkAbility();
+	
+	// Listen to remove cooldown tag whenever the game state changes
+	UGlobalMessageSubsystem::CallOrStartListeningForGlobalMessage(BmrGameplayTags::Event::GameState_Changed, this, &ThisClass::OnGameStateChanged);
 }
 
 // Called when the component is unregistered, used to clean up resources
@@ -148,4 +173,12 @@ void USbPlayerStateComponent::OnCooldownTagChanged_Implementation(struct FGamepl
 		// Cooldown ended, show the aura
 		ASC.AddGameplayCue(SbGameplayTags::GameplayCue::BlinkAura, ASC.MakeEffectContext());
 	}
+}
+
+// Called when the current game state was changed
+void USbPlayerStateComponent::OnGameStateChanged_Implementation(const struct FGameplayEventData& Payload)
+{
+	// The call here ensures the cooldown gets cleared whenever the game state changes
+	// like if transitioning from InGame to GameStarting (when a match is restarted)
+	ClearBlinkCooldown();
 }
