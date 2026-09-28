@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Abilities/GameplayAbility.h"
-#include "Structures/BmrCell.h"
 
 #include "SbBlinkAbility.generated.h"
 
@@ -31,7 +30,7 @@ protected:
 	
 	/** Finds the farthest valid cell in the specified blink direction. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
-	FBmrCell FindFarthestValidBlinkCell(const class ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
+	struct FBmrCell FindFarthestValidBlinkCell(const class ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
 
 	/*********************************************************************************************
 	 * Overrides
