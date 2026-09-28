@@ -8,7 +8,6 @@
 
 // Bomber
 #include "Actors/BmrPawn.h"
-#include "Bomber.h"
 #include "Components/BmrMoverComponent.h"
 #include "Subsystems/GlobalMessageSubsystem.h"
 #include "UtilityLibraries/BmrCellUtilsLibrary.h"
@@ -19,10 +18,6 @@
 #include "NiagaraSystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SbBlinkAbility)
-
-// .5f is a bias that pushes the target vector far enough so SnapVectorOnLevel picks the cell ahead of the player
-// It doesn't actually affect where the player is teleported, since the new cell's location is used directly when teleporting
-static constexpr float BlinkSnapBias = .5f;
 
 // This value is used directly if the ShouldBlinkRangeBeInfinite CVar is set to true to make the Blink have infinite range
 static constexpr int32 BlinkInfiniteRange = 8.f;
@@ -48,6 +43,25 @@ void USbBlinkAbility::ExecuteBlinkCue(const FGameplayAbilityActorInfo& ActorInfo
 		const FGameplayCueParameters CueParams;
 		UGameplayCueManager::ExecuteGameplayCue_NonReplicated(ActorInfo.AvatarActor.Get(), CueTag, CueParams);
 	}
+}
+
+// Finds the farthest valid cell in the specified blink direction
+FBmrCell USbBlinkAbility::FindFarthestValidBlinkCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const
+{
+	for (int32 Step = BlinkInfiniteRange; Step >= 1; --Step)
+	{
+		const FVector CurrentLocation = AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * Step);
+		const FBmrCell FarthestValidCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(CurrentLocation);
+
+		if (UBmrCellUtilsLibrary::IsCellExistsOnLevel(FarthestValidCell)
+		   && !UBmrCellUtilsLibrary::IsCellBlocked(FarthestValidCell)
+		   && FarthestValidCell != PlayerCell)
+		{
+			return FarthestValidCell;
+		}
+	}
+
+	return FBmrCell::InvalidCell;
 }
 
 /*********************************************************************************************
@@ -85,51 +99,60 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 									   ? InputIntent.GetSafeNormal()
 									   : AvatarPawn->GetActorForwardVector();
 
-	// If the Blink range was set to be infinite, use the infinite range constexpr variable
-	// Otherwise, get the Blink extra tiles set in data asset, or CVar if set
-	const int32 BlinkExtraTiles = USbDataAsset::Get().ShouldBlinkRangeBeInfinite()
-							? BlinkInfiniteRange
-							: USbDataAsset::Get().GetBlinkTileRange();
-
 	const FBmrCell PlayerCell = UBmrCellUtilsLibrary::SnapActorOnLevel(AvatarPawn);
 
-	// Find the furthest valid unoccupied cell in the blink direction within range
-	// Walks backwards from max range toward the player to blink as far as possible
+	// Target cell whose location will be passed in for the blink location
 	FBmrCell TargetCell = FBmrCell::InvalidCell;
-	for (int32 TilesAhead = BlinkExtraTiles; TilesAhead >= 1; --TilesAhead)
+	bool bEncounteredObstacle = false;
+
+	// Goes through all cells ahead of the blink direction
+	for (int32 Step = 1; Step <= BlinkInfiniteRange; ++Step)
 	{
-		// Location used to find the nearest grid cell to blink to
-		const FVector CandidateLocation =
-			AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * TilesAhead + FBmrCell::CellSize * BlinkSnapBias);
+		// Candidate values start off from the current location and cell
+		const FVector CurrentLocation = AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * Step);
+		const FBmrCell CandidateCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(CurrentLocation);
 
-		// Initializes the FBmrCell struct with a snap to the nearest cell in that blink target location
-		const FBmrCell CandidateCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(CandidateLocation);
-
-		// If the player is on the same cell as the blink destination cell, skip
-		// This prevents the blink from succeeding if the player tries to blink out of bounds (map edge)
-		if (CandidateCell == PlayerCell || !CandidateCell.IsValid())
+		// If the candidate cell is not valid, or it's the same as the player's current cell, return
+		if (!UBmrCellUtilsLibrary::IsCellExistsOnLevel(CandidateCell) || CandidateCell == PlayerCell)
 		{
 			BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
 			ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
 			K2_EndAbility();
-			continue;
+			return;
 		}
 
-		// Skip if the target cell is occupied by a wall, box or bomb
-		if (UBmrCellUtilsLibrary::IsCellHasAnyMatchingActor(CandidateCell, TO_FLAG(EAT::Wall) | TO_FLAG(EAT::Box) | TO_FLAG(EAT::Bomb)))
+		// Keep looking for empty cells ahead if there is an obstacle on the current checked cell
+		if (UBmrCellUtilsLibrary::IsCellBlocked(CandidateCell))
 		{
-			BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_Occupied, AvatarPawn);
-			ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
-			K2_EndAbility();
+			bEncounteredObstacle = true;
 			continue;
 		}
 
-		TargetCell = CandidateCell;
-		break;
+		// The target cell becomes the first free cell after obstacle(s) 
+		if (bEncounteredObstacle)
+		{
+			TargetCell = CandidateCell;
+			break;
+		}
 	}
-
-	// Fail blink if no valid cell was found in the entire range
-	if (!TargetCell.IsValid())
+	
+	// If there were no obstacles, blink to the edge cell in that direction
+	if (!bEncounteredObstacle)
+	{
+		TargetCell = FindFarthestValidBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
+	}
+	
+	// If there is no free cell after an encountered obstacle (obstacle is at the edge of the map), blink to the free cell right before the obstacle
+	if (bEncounteredObstacle && !TargetCell.IsValid())
+	{
+		TargetCell = FindFarthestValidBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
+	}
+	
+	// [?] TODO: Random cell fallback if no valid cell
+	
+	// Don't blink if the target cell is invalid (a valid cell was never found)
+	// This should never happen in practice due to a random cell fallback, but is here as a preventative measure
+	if (TargetCell == FBmrCell::InvalidCell)
 	{
 		BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
 		ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);

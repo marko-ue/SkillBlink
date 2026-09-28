@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Abilities/GameplayAbility.h"
+#include "Structures/BmrCell.h"
 
 #include "SbBlinkAbility.generated.h"
 
@@ -27,6 +28,10 @@ protected:
 	/** Executes the appropriate Blink cue depending on the tag passed in. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
 	void ExecuteBlinkCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayTag& CueTag) const;
+	
+	/** Finds the farthest valid cell in the specified blink direction. */
+	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
+	FBmrCell FindFarthestValidBlinkCell(const class ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
 
 	/*********************************************************************************************
 	 * Overrides
