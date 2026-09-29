@@ -23,7 +23,7 @@
 // This value is used directly if the ShouldBlinkRangeBeInfinite CVar is set to true to make the Blink have infinite range
 static constexpr int32 BlinkInfiniteRange = 8;
 
-// Corner sweep settings: how far along the ray to sweep, how far to each side to sample, the distance between samples, and a constant to find the target tile consistently
+// Corner sweep settings: how far along the ray to sweep (if capped), how far to each side to sample, the distance between samples, and a constant to find the target tile consistently
 static constexpr float BlinkCornerSweepRange = 1.5f;
 static constexpr float BlinkCornerSweepRadius = 0.2f;
 static constexpr float BlinkCornerSweepStep = 0.1f;
@@ -127,7 +127,7 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	const float SweepStepDistance = FBmrCell::CellSize * BlinkCornerSweepStep;
 	
 	// How far along the ray the sweep goes in total, kept short so far away gaps can't override a nearer target
-	const float SweepMaxDistance = FBmrCell::CellSize * BlinkCornerSweepRange;
+	float SweepMaxDistance = FBmrCell::CellSize * BlinkCornerSweepRange;
 	
 	// Starts one step ahead of the player and moves forward until the max sweep distance is reached
 	for (float SweepDistance = SweepStepDistance; SweepDistance <= SweepMaxDistance; SweepDistance += SweepStepDistance)
@@ -155,6 +155,10 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 				&& BeyondCell != PlayerCell)
 			{
 				TargetCell = BeyondCell;
+				
+				// Keep sweeping further to check if there are additional corners in the same diagonal, and use the furthest one as the target cell
+				SweepMaxDistance = FMath::Min(SweepDistance + FBmrCell::CellSize * BlinkCornerSweepRange, FBmrCell::CellSize * BlinkInfiniteRange);
+				continue;
 			}
 			// Stop at the first gap found, even if the beyond cell was unusable, so the sweep never looks past the nearest gap
 			// If TargetCell is still invalid here, the normal cell search below takes over
