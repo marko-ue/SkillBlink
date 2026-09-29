@@ -17,13 +17,4 @@ class SKILLBLINKRUNTIME_API USbCheatExtension : public UMetaCheatManagerExtensio
 {
 	GENERATED_BODY()
 	
-	/*********************************************************************************************
-	 * CVars
-	 ********************************************************************************************* */
-public:
-	/** Override the Blink extra tiles, where 1 is the minimum and 8 is the maximum. */
-	static TAutoConsoleVariable<int32> CVarBlinkTileRange;
-	
-	/** Override whether the blink range should be infinite (pass through all tiles). */
-	static TAutoConsoleVariable<bool> CVarShouldBlinkRangeBeInfinite;
 };
