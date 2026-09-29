@@ -13,6 +13,7 @@
 #include "UtilityLibraries/BmrCellUtilsLibrary.h"
 
 // UE
+#include "AbilitySystemComponent.h"
 #include "GameplayCueManager.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraSystem.h"
@@ -159,11 +160,23 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		K2_EndAbility();
 		return;
 	}
+	
+	UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
+	
+	// Add cue for the blink trail
+	ASC->AddGameplayCue(SbGameplayTags::GameplayCue::BlinkTrail, ASC->MakeEffectContext());
 
 	// Teleport (blink) the player to the blink target location
 	MoverComp->TeleportToLocation(TargetCell.Location);
 	BroadcastBlinkResult(SbGameplayTags::Event::BlinkSucceeded, AvatarPawn);
 	ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkSucceeded);
+	
+	// Remove cue for the blink trail after a short delay to allow the trail to extend itself to the new location
+	FTimerHandle TrailTimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TrailTimerHandle, [this]()
+	{
+		GetAbilitySystemComponentFromActorInfo()->RemoveGameplayCue(SbGameplayTags::GameplayCue::BlinkTrail);
+	}, 0.2f, false);
 
 	// Spawn the portal niagara system at the player's current location and the target cell's location (the blink destination)
 	if (UNiagaraSystem* PortalNiagaraSystem = USbDataAsset::Get().GetPortalNiagaraSystem())
