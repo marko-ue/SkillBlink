@@ -18,11 +18,11 @@ class SKILLBLINKRUNTIME_API USbBlinkResultWidget : public UUserWidget
 	 * Protected properties
 	 ********************************************************************************************* */
 protected:
-	/** Text block for displaying the Blink result. */
+	/** Image for displaying the Blink result. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Transient, Category = "[SkillBlink]", meta = (BlueprintProtected, BindWidget))
-	TObjectPtr<class UTextBlock> BlinkResultText = nullptr;
+	TObjectPtr<class UImage> BlinkResultImage = nullptr;
 
-	/** Animation for fading out the blink result text. */
+	/** Animation for fading out the blink result image. */
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
 	TObjectPtr<UWidgetAnimation> BlinkResultFadeOut = nullptr;
 

@@ -9,7 +9,7 @@
 #include "Subsystems/GlobalMessageSubsystem.h"
 
 // UE
-#include "Components/TextBlock.h"
+#include "Components/Image.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SbBlinkResultWidget)
 
@@ -27,9 +27,9 @@ void USbBlinkResultWidget::NativeConstruct()
 	UGlobalMessageSubsystem::CallOrStartListeningForGlobalMessage(SbGameplayTags::Event::BlinkFailed_Occupied, this, &ThisClass::OnBlinkResult);
 	UGlobalMessageSubsystem::CallOrStartListeningForGlobalMessage(SbGameplayTags::Event::BlinkSucceeded, this, &ThisClass::OnBlinkResult);
 
-	if (BlinkResultText)
+	if (BlinkResultImage)
 	{
-		BlinkResultText->SetVisibility(ESlateVisibility::Hidden);
+		BlinkResultImage->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 
@@ -47,29 +47,18 @@ void USbBlinkResultWidget::NativeDestruct()
  ********************************************************************************************* */
 
 // Called when the blink ability result is broadcast
-// If blink failed, updates the text block with the failure reason depending on what the ability broadcasts, otherwise hides the text block
+// If blink failed, show the blink result image, otherwise hide it
 void USbBlinkResultWidget::OnBlinkResult_Implementation(const FGameplayEventData& Payload)
 {
 	if (Payload.EventTag == SbGameplayTags::Event::BlinkSucceeded)
 	{
-		BlinkResultText->SetVisibility(ESlateVisibility::Hidden);
+		BlinkResultImage->SetVisibility(ESlateVisibility::Hidden);
 		return;
 	}
 
-	FText FailureReason;
-	if (Payload.EventTag == SbGameplayTags::Event::BlinkFailed_InvalidCell)
-	{
-		FailureReason = NSLOCTEXT("SkillBlink", "InvalidCell", "Cannot blink: target cell is not valid");
-	}
-	else if (Payload.EventTag == SbGameplayTags::Event::BlinkFailed_Occupied)
-	{
-		FailureReason = NSLOCTEXT("SkillBlink", "Occupied", "Cannot blink: cell is occupied");
-	}
-
-	// Update the text with the failure reason, show the text, and start playing the text fade out animation
-	BlinkResultText->SetText(FailureReason);
-	BlinkResultText->SetRenderOpacity(1.f);
-	BlinkResultText->SetVisibility(ESlateVisibility::Visible);
+	// Show the blink result image, and starting playing its fade out animation
+	BlinkResultImage->SetRenderOpacity(1.f);
+	BlinkResultImage->SetVisibility(ESlateVisibility::Visible);
 	if (BlinkResultFadeOut)
 	{
 		PlayAnimation(BlinkResultFadeOut);
