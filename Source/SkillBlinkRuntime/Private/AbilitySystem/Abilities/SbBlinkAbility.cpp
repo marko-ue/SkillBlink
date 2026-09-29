@@ -164,14 +164,17 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
 	
 	// Add cue for the blink trail
-	ASC->AddGameplayCue(SbGameplayTags::GameplayCue::BlinkTrail, ASC->MakeEffectContext());
+	FGameplayCueParameters Params;
+	Params.Normal = AvatarPawn->GetActorLocation();
+	Params.Location = TargetCell.Location;
+	ASC->AddGameplayCue(SbGameplayTags::GameplayCue::BlinkTrail, Params);
 
 	// Teleport (blink) the player to the blink target location
 	MoverComp->TeleportToLocation(TargetCell.Location);
 	BroadcastBlinkResult(SbGameplayTags::Event::BlinkSucceeded, AvatarPawn);
 	ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkSucceeded);
 	
-	// Remove cue for the blink trail after a short delay to allow the trail to extend itself to the new location
+	// Remove cue for the blink trail after a short delay to allow the trail to move itself to the new location
 	FTimerHandle TrailTimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(TrailTimerHandle, [this]()
 	{
