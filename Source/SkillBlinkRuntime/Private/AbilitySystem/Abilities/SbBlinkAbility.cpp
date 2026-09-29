@@ -21,7 +21,13 @@
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SbBlinkAbility)
 
 // This value is used directly if the ShouldBlinkRangeBeInfinite CVar is set to true to make the Blink have infinite range
-static constexpr int32 BlinkInfiniteRange = 8.f;
+static constexpr int32 BlinkInfiniteRange = 8;
+
+// Corner sweep settings: how far along the ray to sweep, how far to each side to sample, the distance between samples, and a constant to find the target tile consistently
+static constexpr float BlinkCornerSweepRange = 1.5f;
+static constexpr float BlinkCornerSweepRadius = 0.2f;
+static constexpr float BlinkCornerSweepStep = 0.1f;
+static constexpr float BlinkCornerBeyondDistance = 0.5;
 
 /*********************************************************************************************
  * Main methods
@@ -106,45 +112,98 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	FBmrCell TargetCell = FBmrCell::InvalidCell;
 	bool bEncounteredObstacle = false;
 
-	// Goes through all cells ahead of the blink direction
-	for (int32 Step = 1; Step <= BlinkInfiniteRange; ++Step)
+	/* 
+	 * Corner sweep: a very small sweep along the start of the blink ray that samples slightly to both sides of it
+	 * If both sides land on different blocked cells, the ray is squeezing through a corner, so blink to the free cell right beyond it
+	 */
+	
+	// The blink direction flattened to the ground plane
+	const FVector RayDirection = FVector(BlinkDirection.X, BlinkDirection.Y, 0.f).GetSafeNormal();
+	
+	// A vector perpendicular to the ray used to probe the cells to each side of it
+	const FVector SideOffset = FVector(-RayDirection.Y, RayDirection.X, 0.f) * (FBmrCell::CellSize * BlinkCornerSweepRadius);
+	
+	// How far the sample point moves forward along the ray on each iteration
+	const float SweepStepDistance = FBmrCell::CellSize * BlinkCornerSweepStep;
+	
+	// How far along the ray the sweep goes in total, kept short so far away gaps can't override a nearer target
+	const float SweepMaxDistance = FBmrCell::CellSize * BlinkCornerSweepRange;
+	
+	// Starts one step ahead of the player and moves forward until the max sweep distance is reached
+	for (float SweepDistance = SweepStepDistance; SweepDistance <= SweepMaxDistance; SweepDistance += SweepStepDistance)
 	{
-		// Candidate values start off from the current location and cell
-		const FVector CurrentLocation = AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * Step);
-		const FBmrCell CandidateCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(CurrentLocation);
+		// The sample point lies on the ray, starting at 0.1 cells ahead of the player
+		// Cells A and B are the cells to the left and right of the sample point on the ray
+		const FVector SamplePoint = AvatarPawn->GetActorLocation() + RayDirection * SweepDistance;
+		const FBmrCell SideCellA = UBmrCellUtilsLibrary::SnapVectorOnLevel(SamplePoint + SideOffset);
+		const FBmrCell SideCellB = UBmrCellUtilsLibrary::SnapVectorOnLevel(SamplePoint - SideOffset);
 
-		// If the candidate cell is not valid, or it's the same as the player's current cell, return
-		if (!UBmrCellUtilsLibrary::IsCellExistsOnLevel(CandidateCell) || CandidateCell == PlayerCell)
+		// The probes must differ on both axes to be a corner. Also accounts for when probes are on the player's tile
+		if (SideCellA.Location.X == SideCellB.Location.X || SideCellA.Location.Y == SideCellB.Location.Y)
 		{
-			BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
-			ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
-			K2_EndAbility();
-			return;
-		}
-
-		// Keep looking for empty cells ahead if there is an obstacle on the current checked cell
-		if (UBmrCellUtilsLibrary::IsCellBlocked(CandidateCell))
-		{
-			bEncounteredObstacle = true;
 			continue;
 		}
 
-		// The target cell becomes the first free cell after obstacle(s) 
-		if (bEncounteredObstacle)
+		// Both side cells exist and are blocked, so the ray is passing through a gap between two obstacles
+		if (UBmrCellUtilsLibrary::IsCellExistsOnLevel(SideCellA) && UBmrCellUtilsLibrary::IsCellBlocked(SideCellA)
+			&& UBmrCellUtilsLibrary::IsCellExistsOnLevel(SideCellB) && UBmrCellUtilsLibrary::IsCellBlocked(SideCellB))
 		{
-			TargetCell = CandidateCell;
+			// The beyond cell is half a cell past the gap. If it exists, is free and is not the player cell, it becomes the blink target
+			const FBmrCell BeyondCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(SamplePoint + RayDirection * (FBmrCell::CellSize * BlinkCornerBeyondDistance));
+			if (UBmrCellUtilsLibrary::IsCellExistsOnLevel(BeyondCell)
+				&& !UBmrCellUtilsLibrary::IsCellBlocked(BeyondCell)
+				&& BeyondCell != PlayerCell)
+			{
+				TargetCell = BeyondCell;
+			}
+			// Stop at the first gap found, even if the beyond cell was unusable, so the sweep never looks past the nearest gap
+			// If TargetCell is still invalid here, the normal cell search below takes over
 			break;
 		}
 	}
-	
+
+	// Goes through all cells ahead of the blink direction, only if the corner sweep didn't find a target
+	if (!TargetCell.IsValid())
+	{
+		for (int32 Step = 1; Step <= BlinkInfiniteRange; ++Step)
+		{
+			// Candidate values start off from the current location and cell
+			const FVector CurrentLocation = AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * Step);
+			const FBmrCell CandidateCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(CurrentLocation);
+
+			// If the candidate cell is not valid, or it's the same as the player's current cell, return
+			if (!UBmrCellUtilsLibrary::IsCellExistsOnLevel(CandidateCell) || CandidateCell == PlayerCell)
+			{
+				BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
+				ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
+				K2_EndAbility();
+				return;
+			}
+
+			// Keep looking for empty cells ahead if there is an obstacle on the current checked cell
+			if (UBmrCellUtilsLibrary::IsCellBlocked(CandidateCell))
+			{
+				bEncounteredObstacle = true;
+				continue;
+			}
+
+			// The target cell becomes the first free cell after obstacle(s) 
+			if (bEncounteredObstacle)
+			{
+				TargetCell = CandidateCell;
+				break;
+			}
+		}
+	}
+
 	// If there were no obstacles, blink to the edge cell in that direction
-	if (!bEncounteredObstacle)
+	if (!TargetCell.IsValid() && !bEncounteredObstacle)
 	{
 		TargetCell = FindFarthestValidBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
 	}
 	
 	// If there is no free cell after an encountered obstacle (obstacle is at the edge of the map), blink to the free cell right before the obstacle
-	if (bEncounteredObstacle && !TargetCell.IsValid())
+	if (!TargetCell.IsValid() && bEncounteredObstacle)
 	{
 		TargetCell = FindFarthestValidBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
 	}
