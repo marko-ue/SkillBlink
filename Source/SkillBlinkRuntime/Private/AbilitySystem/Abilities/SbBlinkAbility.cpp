@@ -29,9 +29,6 @@ static constexpr float BlinkCornerSweepRadius = 0.2f;
 static constexpr float BlinkCornerSweepStep = 0.1f;
 static constexpr float BlinkCornerBeyondDistance = 0.5f;
 
-// How many cells around the player to search when a blink would only move a single cell, and not over an obstacle
-static constexpr int32 BlinkNearbySearchRadius = 3;
-
 /*********************************************************************************************
  * Main methods
  ********************************************************************************************* */
@@ -153,11 +150,12 @@ FBmrCell USbBlinkAbility::FindNearbyBlinkCell(const FBmrCell& PlayerCell, const 
 {
 	FBmrCell NearbyCell = FBmrCell::InvalidCell;
 	double BestDistanceSquared = TNumericLimits<double>::Max();
+	int32 BlinkNearbyTileSearchRadius = USbDataAsset::Get().GetBlinkTileFallbackSearchRadius();
 	
 	// Finds offsets in both ways depending on the search radius, and loops until it checks all of them
-	for (int32 OffsetY = -BlinkNearbySearchRadius; OffsetY <= BlinkNearbySearchRadius; ++OffsetY)
+	for (int32 OffsetY = -BlinkNearbyTileSearchRadius; OffsetY <= BlinkNearbyTileSearchRadius; ++OffsetY)
 	{
-		for (int32 OffsetX = -BlinkNearbySearchRadius; OffsetX <= BlinkNearbySearchRadius; ++OffsetX)
+		for (int32 OffsetX = -BlinkNearbyTileSearchRadius; OffsetX <= BlinkNearbyTileSearchRadius; ++OffsetX)
 		{
 			// Skip the player's cell and its direct connecting tiles, since a one-cell blink is what this replaces
 			if (FMath::Max(FMath::Abs(OffsetX), FMath::Abs(OffsetY)) < 2)

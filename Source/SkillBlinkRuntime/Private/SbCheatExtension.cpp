@@ -21,3 +21,10 @@ TAutoConsoleVariable<bool> USbCheatExtension::CVarShouldBlinkUseTileFallback(
 	true,
 	TEXT("Set to false to make blink not use tile fallbacks, so you are allowed to blink only 1 tile ahead while not going over an obstacle"),
 	ECVF_Cheat);
+
+// Override the Blink tile fallback search radius
+TAutoConsoleVariable<int32> USbCheatExtension::CVarBlinkTileFallbackSearchRadius(
+	TEXT("Bomber.SkillBlink.BlinkTileFallbackSearchRadius"),
+	-1,
+	TEXT("Override blink tile fallback search radius, which determines how many tiles around the player the tile fallback should check for. -1 uses default from data asset"),
+	ECVF_Cheat);

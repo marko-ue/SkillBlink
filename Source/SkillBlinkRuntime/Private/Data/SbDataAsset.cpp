@@ -41,3 +41,16 @@ bool USbDataAsset::ShouldBlinkUseTileFallback() const
 
 	return CVarShouldBlinkUseTileFallback;
 }
+
+int32 USbDataAsset::GetBlinkTileFallbackSearchRadius() const
+{
+#if !UE_BUILD_SHIPPING
+	const float CVarBlinkTileFallbackSearchRadius = USbCheatExtension::CVarBlinkTileFallbackSearchRadius.GetValueOnAnyThread();
+	if (CVarBlinkTileFallbackSearchRadius >= 0.f)
+	{
+		return CVarBlinkTileFallbackSearchRadius;
+	}
+#endif // !UE_BUILD_SHIPPING
+
+	return CVarBlinkTileFallbackSearchRadius;
+}
