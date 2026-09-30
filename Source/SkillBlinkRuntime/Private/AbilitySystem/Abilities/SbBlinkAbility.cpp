@@ -20,8 +20,8 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SbBlinkAbility)
 
-// This value is used directly if the ShouldBlinkRangeBeInfinite CVar is set to true to make the Blink have infinite range
-static constexpr int32 BlinkInfiniteRange = 8;
+// Const used in for loops to search for all tiles in front of the player
+static constexpr int32 BlinkTileSearchAmount = 8;
 
 // Corner sweep settings: how far along the ray to sweep (if capped), how far to each side to sample, the distance between samples, and a constant to find the target tile consistently
 static constexpr float BlinkCornerSweepRange = 1.5f;
@@ -55,11 +55,12 @@ void USbBlinkAbility::ExecuteBlinkCue(const FGameplayAbilityActorInfo& ActorInfo
 // Finds the farthest valid cell in the specified blink direction
 FBmrCell USbBlinkAbility::FindFarthestValidBlinkCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const
 {
-	for (int32 Step = BlinkInfiniteRange; Step >= 1; --Step)
+	for (int32 Step = BlinkTileSearchAmount; Step >= 1; --Step)
 	{
 		const FVector CurrentLocation = AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * Step);
 		const FBmrCell FarthestValidCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(CurrentLocation);
 
+		// The farthest valid cell is one that exists, is not blocked, and is not the player cell
 		if (UBmrCellUtilsLibrary::IsCellExistsOnLevel(FarthestValidCell)
 		   && !UBmrCellUtilsLibrary::IsCellBlocked(FarthestValidCell)
 		   && FarthestValidCell != PlayerCell)
@@ -131,7 +132,7 @@ FBmrCell USbBlinkAbility::FindCornerBlinkCell(const ABmrPawn* AvatarPawn, const 
 				}
 
 				// Keep sweeping further to check if there are additional corners in the same diagonal, and use the furthest one as the target cell
-				SweepMaxDistance = FMath::Min(SweepDistance + FBmrCell::CellSize * BlinkCornerSweepRange, FBmrCell::CellSize * BlinkInfiniteRange);
+				SweepMaxDistance = FMath::Min(SweepDistance + FBmrCell::CellSize * BlinkCornerSweepRange, FBmrCell::CellSize * BlinkTileSearchAmount);
 				continue;
 			}
 
@@ -193,7 +194,7 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	// Goes through all cells ahead of the blink direction, only if the corner sweep didn't find a target
 	if (!TargetCell.IsValid())
 	{
-		for (int32 Step = 1; Step <= BlinkInfiniteRange; ++Step)
+		for (int32 Step = 1; Step <= BlinkTileSearchAmount; ++Step)
 		{
 			// Candidate values start off from the current location and cell
 			const FVector CurrentLocation = AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * Step);
@@ -236,10 +237,10 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		TargetCell = FindFarthestValidBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
 	}
 	
-	// [?] TODO: Random cell fallback if no valid cell
+	// TODO: Cell fallback if blink would only blink 1 tile ahead, and not over an obstacle
 	
 	// Don't blink if the target cell is invalid (a valid cell was never found)
-	// This should never happen in practice due to a random cell fallback, but is here as a preventative measure
+	// This only happens if there's no free cell in the entire row/column the player is trying to blink through
 	if (TargetCell == FBmrCell::InvalidCell)
 	{
 		BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
