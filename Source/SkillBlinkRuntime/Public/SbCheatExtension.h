@@ -23,4 +23,7 @@ class SKILLBLINKRUNTIME_API USbCheatExtension : public UMetaCheatManagerExtensio
 public:
 	/** Override whether corner blinks chain through consecutive corners. */
 	static TAutoConsoleVariable<bool> CVarShouldBlinkChainThroughCorners;
+	
+	/** Override whether blink should use a tile fallback when blinking only a single tile and not over an obstacle. */
+	static TAutoConsoleVariable<bool> CVarShouldBlinkUseTileFallback;
 };

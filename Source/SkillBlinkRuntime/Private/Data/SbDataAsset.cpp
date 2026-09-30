@@ -28,3 +28,16 @@ bool USbDataAsset::ShouldBlinkChainThroughCorners() const
 
 	return CVarShouldBlinkChainThroughCorners;
 }
+
+bool USbDataAsset::ShouldBlinkUseTileFallback() const
+{
+#if !UE_BUILD_SHIPPING
+	const bool CVarShouldBlinkUseTileFallback = USbCheatExtension::CVarShouldBlinkUseTileFallback.GetValueOnAnyThread();
+	if (CVarShouldBlinkUseTileFallback)
+	{
+		return CVarShouldBlinkUseTileFallback;
+	}
+#endif // !UE_BUILD_SHIPPING
+
+	return CVarShouldBlinkUseTileFallback;
+}

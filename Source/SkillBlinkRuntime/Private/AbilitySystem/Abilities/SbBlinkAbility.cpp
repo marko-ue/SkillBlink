@@ -283,7 +283,8 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	// blink to the free cell nearby in front of the player that is closest to that target instead.
 	// Corner blinks are excluded, since going between corners is a good blink usage
 	if (!bFoundCornerTarget && TargetCell.IsValid() 
-		&& FVector::Dist2D(TargetCell.Location, PlayerCell.Location) < FBmrCell::CellSize * 1.5f)
+		&& FVector::Dist2D(TargetCell.Location, PlayerCell.Location) < FBmrCell::CellSize * 1.5f
+		&& USbDataAsset::Get().ShouldBlinkUseTileFallback())
 	{
 		// If a nearby free cell is not found, the single blink range target cell stays
 		const FBmrCell NearbyCell = FindNearbyBlinkCell(PlayerCell, BlinkDirection, TargetCell);

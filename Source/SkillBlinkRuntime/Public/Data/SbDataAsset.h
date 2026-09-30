@@ -42,6 +42,10 @@ public:
 	/** Returns whether corner blinks should chain through consecutive corners. */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
 	bool ShouldBlinkChainThroughCorners() const;
+	
+	/** Returns whether blink uses tile fallback. */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
+	bool ShouldBlinkUseTileFallback() const;
 
 protected:
 	/** The Blink ability class to grant to the player. */
@@ -51,6 +55,10 @@ protected:
 	/** Should corner blinks chain through consecutive corners. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Blink Settings", meta = (BlueprintProtected, ShowOnlyInnerProperties))
 	bool bShouldBlinkChainThroughCorners = true;
+	
+	/** Should corner blinks chain through consecutive corners. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Blink Settings", meta = (BlueprintProtected, ShowOnlyInnerProperties))
+	bool bShouldBlinkUseTileFallback = true;
 
 	/*********************************************************************************************
 	 * VFX
