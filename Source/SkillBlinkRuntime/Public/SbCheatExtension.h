@@ -17,4 +17,10 @@ class SKILLBLINKRUNTIME_API USbCheatExtension : public UMetaCheatManagerExtensio
 {
 	GENERATED_BODY()
 	
+	/*********************************************************************************************
+	 * CVars
+	 ********************************************************************************************* */
+public:
+	/** Override whether corner blinks chain through consecutive corners. */
+	static TAutoConsoleVariable<bool> CVarShouldBlinkChainThroughCorners;
 };

@@ -14,3 +14,17 @@ const USbDataAsset& USbDataAsset::Get()
 {
 	return UDalSubsystem::GetDataAssetChecked<ThisClass>();
 }
+
+// Returns whether corner blinks should chain through consecutive corners
+bool USbDataAsset::ShouldBlinkChainThroughCorners() const
+{
+#if !UE_BUILD_SHIPPING
+	const bool CVarShouldBlinkChainThroughCorners = USbCheatExtension::CVarShouldBlinkChainThroughCorners.GetValueOnAnyThread();
+	if (CVarShouldBlinkChainThroughCorners)
+	{
+		return CVarShouldBlinkChainThroughCorners;
+	}
+#endif // !UE_BUILD_SHIPPING
+
+	return CVarShouldBlinkChainThroughCorners;
+}

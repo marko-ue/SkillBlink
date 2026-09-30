@@ -156,6 +156,12 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 			{
 				TargetCell = BeyondCell;
 				
+				// With chaining disabled, the first corner is the final target cell
+				if (!USbDataAsset::Get().ShouldBlinkChainThroughCorners())
+				{
+					break;
+				}
+				
 				// Keep sweeping further to check if there are additional corners in the same diagonal, and use the furthest one as the target cell
 				SweepMaxDistance = FMath::Min(SweepDistance + FBmrCell::CellSize * BlinkCornerSweepRange, FBmrCell::CellSize * BlinkInfiniteRange);
 				continue;

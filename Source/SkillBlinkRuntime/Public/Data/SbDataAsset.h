@@ -38,11 +38,19 @@ public:
 	/** Returns the Blink ability class. */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
 	FORCEINLINE TSubclassOf<class UGameplayAbility> GetBlinkAbilityClass() const { return BlinkAbilityClass; }
+	
+	/** Returns whether corner blinks should chain through consecutive corners. */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
+	bool ShouldBlinkChainThroughCorners() const;
 
 protected:
 	/** The Blink ability class to grant to the player. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities", meta = (BlueprintProtected, ShowOnlyInnerProperties))
 	TSubclassOf<UGameplayAbility> BlinkAbilityClass = nullptr;
+	
+	/** Should corner blinks chain through consecutive corners. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Blink Settings", meta = (BlueprintProtected, ShowOnlyInnerProperties))
+	bool bShouldBlinkChainThroughCorners = true;
 
 	/*********************************************************************************************
 	 * VFX
