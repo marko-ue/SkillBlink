@@ -27,7 +27,7 @@ static constexpr int32 BlinkInfiniteRange = 8;
 static constexpr float BlinkCornerSweepRange = 1.5f;
 static constexpr float BlinkCornerSweepRadius = 0.2f;
 static constexpr float BlinkCornerSweepStep = 0.1f;
-static constexpr float BlinkCornerBeyondDistance = 0.5;
+static constexpr float BlinkCornerBeyondDistance = 0.5f;
 
 /*********************************************************************************************
  * Main methods
@@ -71,6 +71,79 @@ FBmrCell USbBlinkAbility::FindFarthestValidBlinkCell(const ABmrPawn* AvatarPawn,
 	return FBmrCell::InvalidCell;
 }
 
+// Tries to find a blink target cell if blinking through a corner
+FBmrCell USbBlinkAbility::FindCornerBlinkCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const
+{
+	/* 
+	 * Corner sweep: a very small sweep along the start of the blink ray that samples slightly to both sides of it
+	 * If both sides land on different blocked cells, the ray is squeezing through a corner, so blink to the free cell right beyond it
+	 */
+
+	// The blink direction flattened to the ground plane
+	const FVector RayDirection = FVector(BlinkDirection.X, BlinkDirection.Y, 0.f).GetSafeNormal();
+
+	// A vector perpendicular to the ray used to probe the cells to each side of it
+	const FVector SideOffset = FVector(-RayDirection.Y, RayDirection.X, 0.f) * (FBmrCell::CellSize * BlinkCornerSweepRadius);
+
+	// How far the sample point moves forward along the ray on each iteration
+	const float SweepStepDistance = FBmrCell::CellSize * BlinkCornerSweepStep;
+
+	// How far along the ray the sweep goes. Starts short so far away gaps can't override a nearer target, and extends whenever a corner is found
+	float SweepMaxDistance = FBmrCell::CellSize * BlinkCornerSweepRange;
+
+	// Should corner blinks should chain through consecutive corners
+	const bool bChainThroughCorners = USbDataAsset::Get().ShouldBlinkChainThroughCorners();
+
+	// Target cell whose location will be passed in for the blink location (if any)
+	FBmrCell TargetCell = FBmrCell::InvalidCell;
+
+	// Starts one step ahead of the player and moves forward until the max sweep distance is reached
+	for (float SweepDistance = SweepStepDistance; SweepDistance <= SweepMaxDistance; SweepDistance += SweepStepDistance)
+	{
+		// The sample point lies on the ray, starting at 0.1 cells ahead of the player
+		// Cells A and B are the cells to the left and right of the sample point on the ray
+		const FVector SamplePoint = AvatarPawn->GetActorLocation() + RayDirection * SweepDistance;
+		const FBmrCell SideCellA = UBmrCellUtilsLibrary::SnapVectorOnLevel(SamplePoint + SideOffset);
+		const FBmrCell SideCellB = UBmrCellUtilsLibrary::SnapVectorOnLevel(SamplePoint - SideOffset);
+
+		// The probes must differ on both axes to be a corner. Also accounts for when probes are on the player's tile
+		if (SideCellA.Location.X == SideCellB.Location.X || SideCellA.Location.Y == SideCellB.Location.Y)
+		{
+			continue;
+		}
+
+		// Both side cells exist and are blocked, so the ray is passing through a gap between two obstacles
+		if (UBmrCellUtilsLibrary::IsCellExistsOnLevel(SideCellA) && UBmrCellUtilsLibrary::IsCellBlocked(SideCellA)
+			&& UBmrCellUtilsLibrary::IsCellExistsOnLevel(SideCellB) && UBmrCellUtilsLibrary::IsCellBlocked(SideCellB))
+		{
+			// The beyond cell is half a cell past the gap. If it exists, is free and is not the player cell, it becomes the blink target
+			const FBmrCell BeyondCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(SamplePoint + RayDirection * (FBmrCell::CellSize * BlinkCornerBeyondDistance));
+			if (UBmrCellUtilsLibrary::IsCellExistsOnLevel(BeyondCell)
+				&& !UBmrCellUtilsLibrary::IsCellBlocked(BeyondCell)
+				&& BeyondCell != PlayerCell)
+			{
+				TargetCell = BeyondCell;
+
+				// With chaining disabled, the first corner is the final target cell
+				if (!bChainThroughCorners)
+				{
+					break;
+				}
+
+				// Keep sweeping further to check if there are additional corners in the same diagonal, and use the furthest one as the target cell
+				SweepMaxDistance = FMath::Min(SweepDistance + FBmrCell::CellSize * BlinkCornerSweepRange, FBmrCell::CellSize * BlinkInfiniteRange);
+				continue;
+			}
+
+			// Stop at the first gap whose beyond cell is unusable, keeping any target found from earlier corners
+			// If the target is still invalid here, the normal cell search takes over
+			break;
+		}
+	}
+
+	return TargetCell;
+}
+
 /*********************************************************************************************
  * Overrides
  ********************************************************************************************* */
@@ -108,69 +181,14 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 
 	const FBmrCell PlayerCell = UBmrCellUtilsLibrary::SnapActorOnLevel(AvatarPawn);
 
-	// Target cell whose location will be passed in for the blink location
+	// Target cell whose location will be passed in for the blink location (if any)
 	FBmrCell TargetCell = FBmrCell::InvalidCell;
+	
+	// Corners are checked first, so squeezing through a corner takes priority over the normal search below
+	TargetCell = FindCornerBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
+	
+	// Tracks whether an obstacle was encountered while looking for a valid cell. This matters for finding the target cell
 	bool bEncounteredObstacle = false;
-
-	/* 
-	 * Corner sweep: a very small sweep along the start of the blink ray that samples slightly to both sides of it
-	 * If both sides land on different blocked cells, the ray is squeezing through a corner, so blink to the free cell right beyond it
-	 */
-	
-	// The blink direction flattened to the ground plane
-	const FVector RayDirection = FVector(BlinkDirection.X, BlinkDirection.Y, 0.f).GetSafeNormal();
-	
-	// A vector perpendicular to the ray used to probe the cells to each side of it
-	const FVector SideOffset = FVector(-RayDirection.Y, RayDirection.X, 0.f) * (FBmrCell::CellSize * BlinkCornerSweepRadius);
-	
-	// How far the sample point moves forward along the ray on each iteration
-	const float SweepStepDistance = FBmrCell::CellSize * BlinkCornerSweepStep;
-	
-	// How far along the ray the sweep goes in total, kept short so far away gaps can't override a nearer target
-	float SweepMaxDistance = FBmrCell::CellSize * BlinkCornerSweepRange;
-	
-	// Starts one step ahead of the player and moves forward until the max sweep distance is reached
-	for (float SweepDistance = SweepStepDistance; SweepDistance <= SweepMaxDistance; SweepDistance += SweepStepDistance)
-	{
-		// The sample point lies on the ray, starting at 0.1 cells ahead of the player
-		// Cells A and B are the cells to the left and right of the sample point on the ray
-		const FVector SamplePoint = AvatarPawn->GetActorLocation() + RayDirection * SweepDistance;
-		const FBmrCell SideCellA = UBmrCellUtilsLibrary::SnapVectorOnLevel(SamplePoint + SideOffset);
-		const FBmrCell SideCellB = UBmrCellUtilsLibrary::SnapVectorOnLevel(SamplePoint - SideOffset);
-
-		// The probes must differ on both axes to be a corner. Also accounts for when probes are on the player's tile
-		if (SideCellA.Location.X == SideCellB.Location.X || SideCellA.Location.Y == SideCellB.Location.Y)
-		{
-			continue;
-		}
-
-		// Both side cells exist and are blocked, so the ray is passing through a gap between two obstacles
-		if (UBmrCellUtilsLibrary::IsCellExistsOnLevel(SideCellA) && UBmrCellUtilsLibrary::IsCellBlocked(SideCellA)
-			&& UBmrCellUtilsLibrary::IsCellExistsOnLevel(SideCellB) && UBmrCellUtilsLibrary::IsCellBlocked(SideCellB))
-		{
-			// The beyond cell is half a cell past the gap. If it exists, is free and is not the player cell, it becomes the blink target
-			const FBmrCell BeyondCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(SamplePoint + RayDirection * (FBmrCell::CellSize * BlinkCornerBeyondDistance));
-			if (UBmrCellUtilsLibrary::IsCellExistsOnLevel(BeyondCell)
-				&& !UBmrCellUtilsLibrary::IsCellBlocked(BeyondCell)
-				&& BeyondCell != PlayerCell)
-			{
-				TargetCell = BeyondCell;
-				
-				// With chaining disabled, the first corner is the final target cell
-				if (!USbDataAsset::Get().ShouldBlinkChainThroughCorners())
-				{
-					break;
-				}
-				
-				// Keep sweeping further to check if there are additional corners in the same diagonal, and use the furthest one as the target cell
-				SweepMaxDistance = FMath::Min(SweepDistance + FBmrCell::CellSize * BlinkCornerSweepRange, FBmrCell::CellSize * BlinkInfiniteRange);
-				continue;
-			}
-			// Stop at the first gap found, even if the beyond cell was unusable, so the sweep never looks past the nearest gap
-			// If TargetCell is still invalid here, the normal cell search below takes over
-			break;
-		}
-	}
 
 	// Goes through all cells ahead of the blink direction, only if the corner sweep didn't find a target
 	if (!TargetCell.IsValid())

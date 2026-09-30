@@ -31,6 +31,10 @@ protected:
 	/** Finds the farthest valid cell in the specified blink direction. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
 	struct FBmrCell FindFarthestValidBlinkCell(const class ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
+	
+	/** Tries to find a blink target cell if blinking through a corner. */
+	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
+	FBmrCell FindCornerBlinkCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
 
 	/*********************************************************************************************
 	 * Overrides
