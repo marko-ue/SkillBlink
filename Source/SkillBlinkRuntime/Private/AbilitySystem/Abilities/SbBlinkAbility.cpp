@@ -20,7 +20,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SbBlinkAbility)
 
-// Const used in for loops to search for all tiles in front of the player
+// Const used in for loops to search for all tiles in the blink direction
 static constexpr int32 BlinkTileSearchAmount = 8;
 
 // Corner sweep settings: how far along the ray to sweep (if capped), how far to each side to sample, the distance between samples, and a constant to find the target tile consistently
@@ -28,6 +28,9 @@ static constexpr float BlinkCornerSweepRange = 1.5f;
 static constexpr float BlinkCornerSweepRadius = 0.2f;
 static constexpr float BlinkCornerSweepStep = 0.1f;
 static constexpr float BlinkCornerBeyondDistance = 0.5f;
+
+// How many cells around the player to search when a blink would only move a single cell, and not over an obstacle
+static constexpr int32 BlinkNearbySearchRadius = 3;
 
 /*********************************************************************************************
  * Main methods
@@ -145,6 +148,44 @@ FBmrCell USbBlinkAbility::FindCornerBlinkCell(const ABmrPawn* AvatarPawn, const 
 	return TargetCell;
 }
 
+// Finds a free cell near the player around the blink direction that is closest to the given target cell
+FBmrCell USbBlinkAbility::FindNearbyBlinkCell(const FBmrCell& PlayerCell, const FVector& BlinkDirection, const FBmrCell& TargetCell) const
+{
+	FBmrCell NearbyCell = FBmrCell::InvalidCell;
+	double BestDistanceSquared = TNumericLimits<double>::Max();
+	
+	// Finds offsets in both ways depending on the search radius, and loops until it checks all of them
+	for (int32 OffsetY = -BlinkNearbySearchRadius; OffsetY <= BlinkNearbySearchRadius; ++OffsetY)
+	{
+		for (int32 OffsetX = -BlinkNearbySearchRadius; OffsetX <= BlinkNearbySearchRadius; ++OffsetX)
+		{
+			// Skip the player's cell and its direct connecting tiles, since a one-cell blink is what this replaces
+			if (FMath::Max(FMath::Abs(OffsetX), FMath::Abs(OffsetY)) < 2)
+			{
+				continue;
+			}
+
+			// Skip the tile in the offset that doesn't exist or is blocked
+			const FVector Offset = FVector(OffsetX, OffsetY, 0.f) * FBmrCell::CellSize;
+			const FBmrCell CandidateCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(PlayerCell.Location + Offset);
+			if (!UBmrCellUtilsLibrary::IsCellExistsOnLevel(CandidateCell) || UBmrCellUtilsLibrary::IsCellBlocked(CandidateCell))
+			{
+				continue;
+			}
+
+			// Only cells closer to the front of the player, and of those the one closest to the given target cell is chosen as the blink target cell
+			const double DistanceSquared = FVector::DistSquared2D(CandidateCell.Location, TargetCell.Location);
+			if (FVector::DotProduct(Offset, BlinkDirection) > 0.f && DistanceSquared < BestDistanceSquared)
+			{
+				BestDistanceSquared = DistanceSquared;
+				NearbyCell = CandidateCell;
+			}
+		}
+	}
+
+	return NearbyCell;
+}
+
 /*********************************************************************************************
  * Overrides
  ********************************************************************************************* */
@@ -187,6 +228,7 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	
 	// Corners are checked first, so squeezing through a corner takes priority over the normal search below
 	TargetCell = FindCornerBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
+	const bool bFoundCornerTarget = TargetCell.IsValid();
 	
 	// Tracks whether an obstacle was encountered while looking for a valid cell. This matters for finding the target cell
 	bool bEncounteredObstacle = false;
@@ -237,7 +279,19 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		TargetCell = FindFarthestValidBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
 	}
 	
-	// TODO: Cell fallback if blink would only blink 1 tile ahead, and not over an obstacle
+	// If the normal search would only move the player a single cell and not over an obstacle, 
+	// blink to the free cell nearby in front of the player that is closest to that target instead.
+	// Corner blinks are excluded, since going between corners is a good blink usage
+	if (!bFoundCornerTarget && TargetCell.IsValid() 
+		&& FVector::Dist2D(TargetCell.Location, PlayerCell.Location) < FBmrCell::CellSize * 1.5f)
+	{
+		// If a nearby free cell is not found, the single blink range target cell stays
+		const FBmrCell NearbyCell = FindNearbyBlinkCell(PlayerCell, BlinkDirection, TargetCell);
+		if (NearbyCell.IsValid())
+		{
+			TargetCell = NearbyCell;
+		}
+	}
 	
 	// Don't blink if the target cell is invalid (a valid cell was never found)
 	// This only happens if there's no free cell in the entire row/column the player is trying to blink through

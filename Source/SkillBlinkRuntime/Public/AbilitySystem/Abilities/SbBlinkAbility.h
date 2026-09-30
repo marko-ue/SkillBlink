@@ -35,6 +35,10 @@ protected:
 	/** Tries to find a blink target cell if blinking through a corner. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
 	FBmrCell FindCornerBlinkCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
+	
+	/** Finds a free cell near the player around the blink direction that is closest to the given target cell. */
+	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
+	FBmrCell FindNearbyBlinkCell(const FBmrCell& PlayerCell, const FVector& BlinkDirection, const FBmrCell& TargetCell) const;
 
 	/*********************************************************************************************
 	 * Overrides
