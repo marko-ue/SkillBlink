@@ -150,7 +150,7 @@ FBmrCell USbBlinkAbility::FindNearbyBlinkCell(const FBmrCell& PlayerCell, const 
 {
 	FBmrCell NearbyCell = FBmrCell::InvalidCell;
 	double BestDistanceSquared = TNumericLimits<double>::Max();
-	int32 BlinkNearbyTileSearchRadius = USbDataAsset::Get().GetBlinkTileFallbackSearchRadius();
+	const int32 BlinkNearbyTileSearchRadius = USbDataAsset::Get().GetBlinkTileFallbackSearchRadius();
 	
 	// Finds offsets in both ways depending on the search radius, and loops until it checks all of them
 	for (int32 OffsetY = -BlinkNearbyTileSearchRadius; OffsetY <= BlinkNearbyTileSearchRadius; ++OffsetY)
@@ -304,11 +304,15 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	
 	UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
 	
+	// Make an effect context and add an origin to it which will be passed into the cue to be used as the player location before the blink
+	FGameplayEffectContextHandle Context = MakeEffectContext(Handle, ActorInfo);
+	Context.AddOrigin(AvatarPawn->GetActorLocation());
+	
 	// Add cue for the blink trail
-	FGameplayCueParameters Params;
-	Params.Normal = AvatarPawn->GetActorLocation();
-	Params.Location = TargetCell.Location;
-	ASC->AddGameplayCue(SbGameplayTags::GameplayCue::BlinkTrail, Params);
+	FGameplayCueParameters CueParams;
+	CueParams.EffectContext = Context;
+	CueParams.Location = TargetCell.Location;
+	ASC->AddGameplayCue(SbGameplayTags::GameplayCue::BlinkTrail, CueParams);
 
 	// Teleport (blink) the player to the blink target location
 	MoverComp->TeleportToLocation(TargetCell.Location);
