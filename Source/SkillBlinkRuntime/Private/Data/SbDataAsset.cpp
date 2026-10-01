@@ -26,7 +26,7 @@ bool USbDataAsset::ShouldBlinkChainThroughCorners() const
 	}
 #endif // !UE_BUILD_SHIPPING
 
-	return CVarShouldBlinkChainThroughCorners;
+	return bShouldBlinkChainThroughCorners;
 }
 
 bool USbDataAsset::ShouldBlinkUseTileFallback() const
@@ -39,7 +39,7 @@ bool USbDataAsset::ShouldBlinkUseTileFallback() const
 	}
 #endif // !UE_BUILD_SHIPPING
 
-	return CVarShouldBlinkUseTileFallback;
+	return bShouldBlinkUseTileFallback;
 }
 
 int32 USbDataAsset::GetBlinkTileFallbackSearchRadius() const
@@ -52,5 +52,5 @@ int32 USbDataAsset::GetBlinkTileFallbackSearchRadius() const
 	}
 #endif // !UE_BUILD_SHIPPING
 
-	return CVarBlinkTileFallbackSearchRadius;
+	return BlinkTileFallbackSearchRadius;
 }
