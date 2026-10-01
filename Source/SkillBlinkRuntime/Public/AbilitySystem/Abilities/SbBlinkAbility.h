@@ -32,9 +32,12 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
 	void HandleBlinkTrailCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayAbilitySpecHandle& Handle, const struct FBmrCell& TargetCell);
 	
+	/** Spawns the portal effects at the player's current location and at the blink destination. */
+	void SpawnBlinkPortals(const class ABmrPawn* AvatarPawn, const FBmrCell& TargetCell) const;
+	
 	/** Finds the farthest valid cell in the specified blink direction. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
-	FBmrCell FindFarthestValidBlinkTargetCell(const class ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
+	FBmrCell FindFarthestValidBlinkTargetCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
 	
 	/** Tries to find a blink target cell if blinking through a corner. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")

@@ -75,6 +75,17 @@ void USbBlinkAbility::HandleBlinkTrailCue(const FGameplayAbilityActorInfo& Actor
 	}, 0.2f, false);
 }
 
+// Spawns the portal effects at the player's current location and at the blink destination
+void USbBlinkAbility::SpawnBlinkPortals(const ABmrPawn* AvatarPawn, const FBmrCell& TargetCell) const
+{
+	// Spawn the portal niagara system at the player's current location and the target cell's location (the blink destination)
+	if (UNiagaraSystem* PortalNiagaraSystem = USbDataAsset::Get().GetPortalNiagaraSystem())
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, PortalNiagaraSystem, AvatarPawn->GetActorLocation());
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, PortalNiagaraSystem, TargetCell.Location);
+	}
+}
+
 // Finds the farthest valid cell in the specified blink direction
 FBmrCell USbBlinkAbility::FindFarthestValidBlinkTargetCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const
 {
@@ -338,12 +349,7 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	BroadcastBlinkResult(SbGameplayTags::Event::BlinkSucceeded, AvatarPawn);
 	ExecuteBlinkResultCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkSucceeded);
 	
-	// Spawn the portal niagara system at the player's current location and the target cell's location (the blink destination)
-	if (UNiagaraSystem* PortalNiagaraSystem = USbDataAsset::Get().GetPortalNiagaraSystem())
-	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, PortalNiagaraSystem, AvatarPawn->GetActorLocation());
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, PortalNiagaraSystem, TargetCell.Location);
-	}
+	SpawnBlinkPortals(AvatarPawn, TargetCell);
 
 	// Ability only commits its cooldown if the teleportation succeeded
 	CommitAbilityCooldown(Handle, ActorInfo, ActivationInfo, false);
