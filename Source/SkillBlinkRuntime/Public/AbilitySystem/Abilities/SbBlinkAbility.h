@@ -28,7 +28,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
 	void ExecuteBlinkResultCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayTag& CueTag) const;
 	
-	/** Handles adding/removing the looping cue for the blink trail. */
+	/** Adds the blink trail cue from the player's current location to the target cell, and removes it after a short delay. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
 	void HandleBlinkTrailCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayAbilitySpecHandle& Handle, const struct FBmrCell& TargetCell);
 	

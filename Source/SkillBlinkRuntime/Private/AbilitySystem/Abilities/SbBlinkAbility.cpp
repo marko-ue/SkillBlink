@@ -52,7 +52,7 @@ void USbBlinkAbility::ExecuteBlinkResultCue(const FGameplayAbilityActorInfo& Act
 	}
 }
 
-// Handles adding/removing the looping cue for the blink trail
+// Adds the blink trail cue from the player's current location to the target cell, and removes it after a short delay
 void USbBlinkAbility::HandleBlinkTrailCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayAbilitySpecHandle& Handle, const FBmrCell& TargetCell)
 {
 	UAbilitySystemComponent* ASC = ActorInfo.AbilitySystemComponent.Get();
@@ -342,14 +342,16 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		return;
 	}
 	
+	// The trail is added before the teleport, since it needs to have the player's location before the blink
 	HandleBlinkTrailCue(*ActorInfo, Handle, TargetCell);
+	
+	// Spawn the portal niagara system at the player's current location and the target cell's location (the blink destination)
+	SpawnBlinkPortals(AvatarPawn, TargetCell);
 	
 	// Teleport (blink) the player to the blink target location
 	MoverComp->TeleportToLocation(TargetCell.Location);
 	BroadcastBlinkResult(SbGameplayTags::Event::BlinkSucceeded, AvatarPawn);
 	ExecuteBlinkResultCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkSucceeded);
-	
-	SpawnBlinkPortals(AvatarPawn, TargetCell);
 
 	// Ability only commits its cooldown if the teleportation succeeded
 	CommitAbilityCooldown(Handle, ActorInfo, ActivationInfo, false);
