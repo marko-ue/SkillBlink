@@ -26,11 +26,15 @@ protected:
 
 	/** Executes the appropriate Blink cue depending on the tag passed in. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
-	void ExecuteBlinkCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayTag& CueTag) const;
+	void ExecuteBlinkResultCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayTag& CueTag) const;
+	
+	/** Handles adding/removing the looping cue for the blink trail. */
+	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
+	void HandleBlinkTrailCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayAbilitySpecHandle& Handle, const struct FBmrCell& TargetCell);
 	
 	/** Finds the farthest valid cell in the specified blink direction. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
-	struct FBmrCell FindFarthestValidBlinkTargetCell(const class ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
+	FBmrCell FindFarthestValidBlinkTargetCell(const class ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
 	
 	/** Tries to find a blink target cell if blinking through a corner. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")

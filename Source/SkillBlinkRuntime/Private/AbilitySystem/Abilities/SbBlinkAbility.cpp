@@ -43,13 +43,36 @@ void USbBlinkAbility::BroadcastBlinkResult(const FGameplayTag& FailureTag, const
 }
 
 // Executes the appropriate Blink cue depending on the tag passed in
-void USbBlinkAbility::ExecuteBlinkCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayTag& CueTag) const
+void USbBlinkAbility::ExecuteBlinkResultCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayTag& CueTag) const
 {
 	if (ActorInfo.IsLocallyControlled())
 	{
 		const FGameplayCueParameters CueParams;
 		UGameplayCueManager::ExecuteGameplayCue_NonReplicated(ActorInfo.AvatarActor.Get(), CueTag, CueParams);
 	}
+}
+
+// Handles adding/removing the looping cue for the blink trail
+void USbBlinkAbility::HandleBlinkTrailCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayAbilitySpecHandle& Handle, const FBmrCell& TargetCell)
+{
+	UAbilitySystemComponent* ASC = ActorInfo.AbilitySystemComponent.Get();
+	
+	// Make an effect context and add an origin to it which will be passed into the cue to be used as the player location before the blink
+	FGameplayEffectContextHandle Context = MakeEffectContext(Handle, &ActorInfo);
+	Context.AddOrigin(Cast<ABmrPawn>(ActorInfo.AvatarActor.Get())->GetActorLocation());
+	
+	// Add cue, passing in the player location and the target cell's location for moving the Niagara effect from the player location to the target cell location
+	FGameplayCueParameters CueParams;
+	CueParams.EffectContext = Context;
+	CueParams.Location = TargetCell.Location;
+	ASC->AddGameplayCue(SbGameplayTags::GameplayCue::BlinkTrail, CueParams);
+	
+	// Remove cue after a short delay to allow the trail to move itself to the new location
+	FTimerHandle TrailTimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TrailTimerHandle, [ASC]()
+	{
+		ASC->RemoveGameplayCue(SbGameplayTags::GameplayCue::BlinkTrail);
+	}, 0.2f, false);
 }
 
 // Finds the farthest valid cell in the specified blink direction
@@ -303,35 +326,18 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	if (TargetCell == FBmrCell::InvalidCell)
 	{
 		BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
-		ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
+		ExecuteBlinkResultCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
 		K2_EndAbility();
 		return;
 	}
 	
-	UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
+	HandleBlinkTrailCue(*ActorInfo, Handle, TargetCell);
 	
-	// Make an effect context and add an origin to it which will be passed into the cue to be used as the player location before the blink
-	FGameplayEffectContextHandle Context = MakeEffectContext(Handle, ActorInfo);
-	Context.AddOrigin(AvatarPawn->GetActorLocation());
-	
-	// Add cue for the blink trail
-	FGameplayCueParameters CueParams;
-	CueParams.EffectContext = Context;
-	CueParams.Location = TargetCell.Location;
-	ASC->AddGameplayCue(SbGameplayTags::GameplayCue::BlinkTrail, CueParams);
-
 	// Teleport (blink) the player to the blink target location
 	MoverComp->TeleportToLocation(TargetCell.Location);
 	BroadcastBlinkResult(SbGameplayTags::Event::BlinkSucceeded, AvatarPawn);
-	ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkSucceeded);
+	ExecuteBlinkResultCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkSucceeded);
 	
-	// Remove cue for the blink trail after a short delay to allow the trail to move itself to the new location
-	FTimerHandle TrailTimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TrailTimerHandle, [this]()
-	{
-		GetAbilitySystemComponentFromActorInfo()->RemoveGameplayCue(SbGameplayTags::GameplayCue::BlinkTrail);
-	}, 0.2f, false);
-
 	// Spawn the portal niagara system at the player's current location and the target cell's location (the blink destination)
 	if (UNiagaraSystem* PortalNiagaraSystem = USbDataAsset::Get().GetPortalNiagaraSystem())
 	{
