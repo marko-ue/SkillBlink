@@ -38,15 +38,15 @@ public:
 	/** Returns the Blink ability class. */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
 	FORCEINLINE TSubclassOf<class UGameplayAbility> GetBlinkAbilityClass() const { return BlinkAbilityClass; }
-	
+
 	/** Returns whether corner blinks should chain through consecutive corners. */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
 	bool ShouldBlinkChainThroughCorners() const;
-	
+
 	/** Returns whether Blink uses tile fallback. */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
 	bool ShouldBlinkUseTileFallback() const;
-	
+
 	/** Returns the Blink tile fallback search radius. */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[SkillBlink]")
 	int32 GetBlinkTileFallbackSearchRadius() const;
@@ -55,15 +55,15 @@ protected:
 	/** The Blink ability class to grant to the player. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities", meta = (BlueprintProtected, ShowOnlyInnerProperties))
 	TSubclassOf<UGameplayAbility> BlinkAbilityClass = nullptr;
-	
+
 	/** Should corner blinks chain through consecutive corners. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Blink Settings", meta = (BlueprintProtected, ShowOnlyInnerProperties))
 	bool bShouldBlinkChainThroughCorners = true;
-	
+
 	/** Should corner blinks chain through consecutive corners. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Blink Settings", meta = (BlueprintProtected, ShowOnlyInnerProperties))
 	bool bShouldBlinkUseTileFallback = true;
-	
+
 	/** How many tiles around the player the tile fallback should check for. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Blink Settings", meta = (BlueprintProtected, ShowOnlyInnerProperties, ClampMin = "1", ClampMax = "8"))
 	int32 BlinkTileFallbackSearchRadius = 3;

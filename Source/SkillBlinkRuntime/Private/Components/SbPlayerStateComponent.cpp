@@ -137,7 +137,7 @@ void USbPlayerStateComponent::BeginPlay()
 	Super::BeginPlay();
 
 	GiveBlinkAbility();
-	
+
 	// Listen to remove cooldown tag whenever the game state changes
 	UGlobalMessageSubsystem::CallOrStartListeningForGlobalMessage(BmrGameplayTags::Event::GameState_Changed, this, &ThisClass::OnGameStateChanged);
 }
@@ -146,7 +146,7 @@ void USbPlayerStateComponent::BeginPlay()
 void USbPlayerStateComponent::OnUnregister()
 {
 	ClearBlinkAbility();
-	
+
 	UGlobalMessageSubsystem::ClearCachedMessages(SbGameplayTags::Event::BlinkActivated);
 	UGlobalMessageSubsystem::StopListeningForAllGlobalMessages(this);
 
@@ -158,7 +158,6 @@ void USbPlayerStateComponent::OnUnregister()
  ********************************************************************************************* */
 
 // Called when the cooldown tag for the Blink ability changes (when it goes on/off cooldown)
-// TODO: Remove once pickup is implemented, cooldown won't exist since it will be a one-time use ability
 void USbPlayerStateComponent::OnCooldownTagChanged_Implementation(struct FGameplayTag Tag, int32 NewCount)
 {
 	UAbilitySystemComponent& ASC = GetPlayerStateChecked().GetAbilitySystemComponentChecked();

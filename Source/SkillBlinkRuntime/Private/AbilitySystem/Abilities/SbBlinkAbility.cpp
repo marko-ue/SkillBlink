@@ -56,17 +56,17 @@ void USbBlinkAbility::ExecuteBlinkResultCue(const FGameplayAbilityActorInfo& Act
 void USbBlinkAbility::HandleBlinkTrailCue(const FGameplayAbilityActorInfo& ActorInfo, const FGameplayAbilitySpecHandle& Handle, const FBmrCell& TargetCell)
 {
 	UAbilitySystemComponent* ASC = ActorInfo.AbilitySystemComponent.Get();
-	
+
 	// Make an effect context and add an origin to it which will be passed into the cue to be used as the player location before the blink
 	FGameplayEffectContextHandle Context = MakeEffectContext(Handle, &ActorInfo);
 	Context.AddOrigin(Cast<ABmrPawn>(ActorInfo.AvatarActor.Get())->GetActorLocation());
-	
+
 	// Add cue, passing in the player location and the target cell's location for moving the Niagara effect from the player location to the target cell location
 	FGameplayCueParameters CueParams;
 	CueParams.EffectContext = Context;
 	CueParams.Location = TargetCell.Location;
 	ASC->AddGameplayCue(SbGameplayTags::GameplayCue::BlinkTrail, CueParams);
-	
+
 	// Remove cue after a short delay to allow the trail to move itself to the new location
 	FTimerHandle TrailTimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(TrailTimerHandle, [ASC]()
@@ -96,8 +96,8 @@ FBmrCell USbBlinkAbility::FindFarthestValidBlinkTargetCell(const ABmrPawn* Avata
 
 		// The farthest valid cell is one that exists, is not blocked, and is not the player cell
 		if (UBmrCellUtilsLibrary::IsCellExistsOnLevel(FarthestValidCell)
-		   && !UBmrCellUtilsLibrary::IsCellBlocked(FarthestValidCell)
-		   && FarthestValidCell != PlayerCell)
+		    && !UBmrCellUtilsLibrary::IsCellBlocked(FarthestValidCell)
+		    && FarthestValidCell != PlayerCell)
 		{
 			return FarthestValidCell;
 		}
@@ -109,7 +109,7 @@ FBmrCell USbBlinkAbility::FindFarthestValidBlinkTargetCell(const ABmrPawn* Avata
 // Tries to find a blink target cell if blinking through a corner
 FBmrCell USbBlinkAbility::FindCornerBlinkTargetCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const
 {
-	/* 
+	/*
 	 * Corner sweep: a very small sweep along the start of the blink ray that samples slightly to both sides of it
 	 * If both sides land on different blocked cells, the ray is squeezing through a corner, so blink to the free cell right beyond it
 	 */
@@ -149,13 +149,13 @@ FBmrCell USbBlinkAbility::FindCornerBlinkTargetCell(const ABmrPawn* AvatarPawn, 
 
 		// Both side cells exist and are blocked, so the ray is passing through a gap between two obstacles
 		if (UBmrCellUtilsLibrary::IsCellExistsOnLevel(SideCellA) && UBmrCellUtilsLibrary::IsCellBlocked(SideCellA)
-			&& UBmrCellUtilsLibrary::IsCellExistsOnLevel(SideCellB) && UBmrCellUtilsLibrary::IsCellBlocked(SideCellB))
+		    && UBmrCellUtilsLibrary::IsCellExistsOnLevel(SideCellB) && UBmrCellUtilsLibrary::IsCellBlocked(SideCellB))
 		{
 			// The beyond cell is half a cell past the gap. If it exists, is free and is not the player cell, it becomes the blink target
 			const FBmrCell BeyondCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(SamplePoint + RayDirection * (FBmrCell::CellSize * BlinkCornerBeyondDistance));
 			if (UBmrCellUtilsLibrary::IsCellExistsOnLevel(BeyondCell)
-				&& !UBmrCellUtilsLibrary::IsCellBlocked(BeyondCell)
-				&& BeyondCell != PlayerCell)
+			    && !UBmrCellUtilsLibrary::IsCellBlocked(BeyondCell)
+			    && BeyondCell != PlayerCell)
 			{
 				TargetCell = BeyondCell;
 
@@ -184,11 +184,11 @@ FBmrCell USbBlinkAbility::FindBlinkTargetCell(const ABmrPawn* AvatarPawn, const 
 {
 	// Target cell whose location will be passed in for the blink location (if any)
 	FBmrCell TargetCell = FBmrCell::InvalidCell;
-	
+
 	// Corners are checked first, so squeezing through a corner takes priority over the normal search below
 	TargetCell = FindCornerBlinkTargetCell(AvatarPawn, BlinkDirection, PlayerCell);
 	const bool bFoundCornerTarget = TargetCell.IsValid();
-	
+
 	// Tracks whether an obstacle was encountered while looking for a valid cell. This matters for finding the target cell
 	bool bEncounteredObstacle = false;
 
@@ -214,7 +214,7 @@ FBmrCell USbBlinkAbility::FindBlinkTargetCell(const ABmrPawn* AvatarPawn, const 
 				continue;
 			}
 
-			// The target cell becomes the first free cell after obstacle(s) 
+			// The target cell becomes the first free cell after obstacle(s)
 			if (bEncounteredObstacle)
 			{
 				TargetCell = CandidateCell;
@@ -228,19 +228,19 @@ FBmrCell USbBlinkAbility::FindBlinkTargetCell(const ABmrPawn* AvatarPawn, const 
 	{
 		TargetCell = FindFarthestValidBlinkTargetCell(AvatarPawn, BlinkDirection, PlayerCell);
 	}
-	
+
 	// If there is no free cell after an encountered obstacle (obstacle is at the edge of the map), blink to the free cell right before the obstacle
 	if (!TargetCell.IsValid() && bEncounteredObstacle)
 	{
 		TargetCell = FindFarthestValidBlinkTargetCell(AvatarPawn, BlinkDirection, PlayerCell);
 	}
-	
-	// If the normal search would only move the player a single cell and not over an obstacle, 
+
+	// If the normal search would only move the player a single cell and not over an obstacle,
 	// blink to the free cell nearby in front of the player that is closest to that target instead.
 	// Corner blinks are excluded, since going between corners is a good blink usage
-	if (!bFoundCornerTarget && TargetCell.IsValid() 
-		&& FVector::Dist2D(TargetCell.Location, PlayerCell.Location) < FBmrCell::CellSize * 1.5f
-		&& USbDataAsset::Get().ShouldBlinkUseTileFallback())
+	if (!bFoundCornerTarget && TargetCell.IsValid()
+	    && FVector::Dist2D(TargetCell.Location, PlayerCell.Location) < FBmrCell::CellSize * 1.5f
+	    && USbDataAsset::Get().ShouldBlinkUseTileFallback())
 	{
 		// If a nearby free cell is not found, the single blink range target cell stays
 		const FBmrCell NearbyCell = FindNearbyBlinkTargetCell(PlayerCell, BlinkDirection, TargetCell);
@@ -249,7 +249,7 @@ FBmrCell USbBlinkAbility::FindBlinkTargetCell(const ABmrPawn* AvatarPawn, const 
 			TargetCell = NearbyCell;
 		}
 	}
-	
+
 	return TargetCell;
 }
 
@@ -259,7 +259,7 @@ FBmrCell USbBlinkAbility::FindNearbyBlinkTargetCell(const FBmrCell& PlayerCell, 
 	FBmrCell NearbyCell = FBmrCell::InvalidCell;
 	double BestDistanceSquared = TNumericLimits<double>::Max();
 	const int32 BlinkNearbyTileSearchRadius = USbDataAsset::Get().GetBlinkTileFallbackSearchRadius();
-	
+
 	// Finds offsets in both ways depending on the search radius, and loops until it checks all of them
 	for (int32 OffsetY = -BlinkNearbyTileSearchRadius; OffsetY <= BlinkNearbyTileSearchRadius; ++OffsetY)
 	{
@@ -324,8 +324,8 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	const FMoverDefaultSyncState* SyncState = MoverComp->GetSyncState().SyncStateCollection.FindDataByType<FMoverDefaultSyncState>();
 	const FVector InputIntent = SyncState ? SyncState->MoveDirectionIntent : FVector::ZeroVector;
 	const FVector BlinkDirection = InputIntent.SizeSquared() > KINDA_SMALL_NUMBER
-									   ? InputIntent.GetSafeNormal()
-									   : AvatarPawn->GetActorForwardVector();
+	                                   ? InputIntent.GetSafeNormal()
+	                                   : AvatarPawn->GetActorForwardVector();
 
 	const FBmrCell PlayerCell = UBmrCellUtilsLibrary::SnapActorOnLevel(AvatarPawn);
 
@@ -341,13 +341,13 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		K2_EndAbility();
 		return;
 	}
-	
+
 	// The trail is added before the teleport, since it needs to have the player's location before the blink
 	HandleBlinkTrailCue(*ActorInfo, Handle, TargetCell);
-	
+
 	// Spawn the portal niagara system at the player's current location and the target cell's location (the blink destination)
 	SpawnBlinkPortals(AvatarPawn, TargetCell);
-	
+
 	// Teleport (blink) the player to the blink target location
 	MoverComp->TeleportToLocation(TargetCell.Location);
 	BroadcastBlinkResult(SbGameplayTags::Event::BlinkSucceeded, AvatarPawn);
