@@ -36,6 +36,10 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
 	FBmrCell FindCornerBlinkCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
 	
+	/** Finds the cell the player should blink to, or an invalid cell if there is no valid target. */
+	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
+	FBmrCell FindBlinkTargetCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
+
 	/** Finds a free cell near the player around the blink direction that is closest to the given target cell. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
 	FBmrCell FindNearbyBlinkCell(const FBmrCell& PlayerCell, const FVector& BlinkDirection, const FBmrCell& TargetCell) const;

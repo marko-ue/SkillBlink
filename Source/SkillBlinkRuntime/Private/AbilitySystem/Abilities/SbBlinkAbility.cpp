@@ -145,6 +145,80 @@ FBmrCell USbBlinkAbility::FindCornerBlinkCell(const ABmrPawn* AvatarPawn, const 
 	return TargetCell;
 }
 
+// Finds the cell the player should blink to, or an invalid cell if there is no valid target
+FBmrCell USbBlinkAbility::FindBlinkTargetCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const
+{
+	// Target cell whose location will be passed in for the blink location (if any)
+	FBmrCell TargetCell = FBmrCell::InvalidCell;
+	
+	// Corners are checked first, so squeezing through a corner takes priority over the normal search below
+	TargetCell = FindCornerBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
+	const bool bFoundCornerTarget = TargetCell.IsValid();
+	
+	// Tracks whether an obstacle was encountered while looking for a valid cell. This matters for finding the target cell
+	bool bEncounteredObstacle = false;
+
+	// Goes through all cells ahead of the blink direction, only if the corner sweep didn't find a target
+	if (!TargetCell.IsValid())
+	{
+		for (int32 Step = 1; Step <= BlinkTileSearchAmount; ++Step)
+		{
+			// Candidate values start off from the current location and cell
+			const FVector CurrentLocation = AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * Step);
+			const FBmrCell CandidateCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(CurrentLocation);
+
+			// If the candidate cell is not valid, or it's the same as the player's current cell, return
+			if (!UBmrCellUtilsLibrary::IsCellExistsOnLevel(CandidateCell) || CandidateCell == PlayerCell)
+			{
+				return FBmrCell::InvalidCell;
+			}
+
+			// Keep looking for empty cells ahead if there is an obstacle on the current checked cell
+			if (UBmrCellUtilsLibrary::IsCellBlocked(CandidateCell))
+			{
+				bEncounteredObstacle = true;
+				continue;
+			}
+
+			// The target cell becomes the first free cell after obstacle(s) 
+			if (bEncounteredObstacle)
+			{
+				TargetCell = CandidateCell;
+				break;
+			}
+		}
+	}
+
+	// If there were no obstacles, blink to the edge cell in that direction
+	if (!TargetCell.IsValid() && !bEncounteredObstacle)
+	{
+		TargetCell = FindFarthestValidBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
+	}
+	
+	// If there is no free cell after an encountered obstacle (obstacle is at the edge of the map), blink to the free cell right before the obstacle
+	if (!TargetCell.IsValid() && bEncounteredObstacle)
+	{
+		TargetCell = FindFarthestValidBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
+	}
+	
+	// If the normal search would only move the player a single cell and not over an obstacle, 
+	// blink to the free cell nearby in front of the player that is closest to that target instead.
+	// Corner blinks are excluded, since going between corners is a good blink usage
+	if (!bFoundCornerTarget && TargetCell.IsValid() 
+		&& FVector::Dist2D(TargetCell.Location, PlayerCell.Location) < FBmrCell::CellSize * 1.5f
+		&& USbDataAsset::Get().ShouldBlinkUseTileFallback())
+	{
+		// If a nearby free cell is not found, the single blink range target cell stays
+		const FBmrCell NearbyCell = FindNearbyBlinkCell(PlayerCell, BlinkDirection, TargetCell);
+		if (NearbyCell.IsValid())
+		{
+			TargetCell = NearbyCell;
+		}
+	}
+	
+	return TargetCell;
+}
+
 // Finds a free cell near the player around the blink direction that is closest to the given target cell
 FBmrCell USbBlinkAbility::FindNearbyBlinkCell(const FBmrCell& PlayerCell, const FVector& BlinkDirection, const FBmrCell& TargetCell) const
 {
@@ -221,79 +295,11 @@ void USbBlinkAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 
 	const FBmrCell PlayerCell = UBmrCellUtilsLibrary::SnapActorOnLevel(AvatarPawn);
 
-	// Target cell whose location will be passed in for the blink location (if any)
-	FBmrCell TargetCell = FBmrCell::InvalidCell;
-	
-	// Corners are checked first, so squeezing through a corner takes priority over the normal search below
-	TargetCell = FindCornerBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
-	const bool bFoundCornerTarget = TargetCell.IsValid();
-	
-	// Tracks whether an obstacle was encountered while looking for a valid cell. This matters for finding the target cell
-	bool bEncounteredObstacle = false;
+	// Target cell whose location will be passed in for the blink location
+	const FBmrCell TargetCell = FindBlinkTargetCell(AvatarPawn, BlinkDirection, PlayerCell);
 
-	// Goes through all cells ahead of the blink direction, only if the corner sweep didn't find a target
-	if (!TargetCell.IsValid())
-	{
-		for (int32 Step = 1; Step <= BlinkTileSearchAmount; ++Step)
-		{
-			// Candidate values start off from the current location and cell
-			const FVector CurrentLocation = AvatarPawn->GetActorLocation() + BlinkDirection * (FBmrCell::CellSize * Step);
-			const FBmrCell CandidateCell = UBmrCellUtilsLibrary::SnapVectorOnLevel(CurrentLocation);
-
-			// If the candidate cell is not valid, or it's the same as the player's current cell, return
-			if (!UBmrCellUtilsLibrary::IsCellExistsOnLevel(CandidateCell) || CandidateCell == PlayerCell)
-			{
-				BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
-				ExecuteBlinkCue(*ActorInfo, SbGameplayTags::GameplayCue::BlinkFailed);
-				K2_EndAbility();
-				return;
-			}
-
-			// Keep looking for empty cells ahead if there is an obstacle on the current checked cell
-			if (UBmrCellUtilsLibrary::IsCellBlocked(CandidateCell))
-			{
-				bEncounteredObstacle = true;
-				continue;
-			}
-
-			// The target cell becomes the first free cell after obstacle(s) 
-			if (bEncounteredObstacle)
-			{
-				TargetCell = CandidateCell;
-				break;
-			}
-		}
-	}
-
-	// If there were no obstacles, blink to the edge cell in that direction
-	if (!TargetCell.IsValid() && !bEncounteredObstacle)
-	{
-		TargetCell = FindFarthestValidBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
-	}
-	
-	// If there is no free cell after an encountered obstacle (obstacle is at the edge of the map), blink to the free cell right before the obstacle
-	if (!TargetCell.IsValid() && bEncounteredObstacle)
-	{
-		TargetCell = FindFarthestValidBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
-	}
-	
-	// If the normal search would only move the player a single cell and not over an obstacle, 
-	// blink to the free cell nearby in front of the player that is closest to that target instead.
-	// Corner blinks are excluded, since going between corners is a good blink usage
-	if (!bFoundCornerTarget && TargetCell.IsValid() 
-		&& FVector::Dist2D(TargetCell.Location, PlayerCell.Location) < FBmrCell::CellSize * 1.5f
-		&& USbDataAsset::Get().ShouldBlinkUseTileFallback())
-	{
-		// If a nearby free cell is not found, the single blink range target cell stays
-		const FBmrCell NearbyCell = FindNearbyBlinkCell(PlayerCell, BlinkDirection, TargetCell);
-		if (NearbyCell.IsValid())
-		{
-			TargetCell = NearbyCell;
-		}
-	}
-	
 	// Don't blink if the target cell is invalid (a valid cell was never found)
-	// This only happens if there's no free cell in the entire row/column the player is trying to blink through
+	// This only happens if there's no free cell in the entire row/column the player is trying to blink through, or ends on the player's own cell
 	if (TargetCell == FBmrCell::InvalidCell)
 	{
 		BroadcastBlinkResult(SbGameplayTags::Event::BlinkFailed_InvalidCell, AvatarPawn);
