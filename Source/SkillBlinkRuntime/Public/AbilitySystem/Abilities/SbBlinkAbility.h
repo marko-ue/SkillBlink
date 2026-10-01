@@ -30,11 +30,11 @@ protected:
 	
 	/** Finds the farthest valid cell in the specified blink direction. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
-	struct FBmrCell FindFarthestValidBlinkCell(const class ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
+	struct FBmrCell FindFarthestValidBlinkTargetCell(const class ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
 	
 	/** Tries to find a blink target cell if blinking through a corner. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
-	FBmrCell FindCornerBlinkCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
+	FBmrCell FindCornerBlinkTargetCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const;
 	
 	/** Finds the cell the player should blink to, or an invalid cell if there is no valid target. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
@@ -42,7 +42,7 @@ protected:
 
 	/** Finds a free cell near the player around the blink direction that is closest to the given target cell. */
 	UFUNCTION(BlueprintCallable, Category = "[SkillBlink]")
-	FBmrCell FindNearbyBlinkCell(const FBmrCell& PlayerCell, const FVector& BlinkDirection, const FBmrCell& TargetCell) const;
+	FBmrCell FindNearbyBlinkTargetCell(const FBmrCell& PlayerCell, const FVector& BlinkDirection, const FBmrCell& TargetCell) const;
 
 	/*********************************************************************************************
 	 * Overrides

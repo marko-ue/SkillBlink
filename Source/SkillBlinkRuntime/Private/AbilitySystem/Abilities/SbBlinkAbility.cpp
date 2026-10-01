@@ -53,7 +53,7 @@ void USbBlinkAbility::ExecuteBlinkCue(const FGameplayAbilityActorInfo& ActorInfo
 }
 
 // Finds the farthest valid cell in the specified blink direction
-FBmrCell USbBlinkAbility::FindFarthestValidBlinkCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const
+FBmrCell USbBlinkAbility::FindFarthestValidBlinkTargetCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const
 {
 	for (int32 Step = BlinkTileSearchAmount; Step >= 1; --Step)
 	{
@@ -73,7 +73,7 @@ FBmrCell USbBlinkAbility::FindFarthestValidBlinkCell(const ABmrPawn* AvatarPawn,
 }
 
 // Tries to find a blink target cell if blinking through a corner
-FBmrCell USbBlinkAbility::FindCornerBlinkCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const
+FBmrCell USbBlinkAbility::FindCornerBlinkTargetCell(const ABmrPawn* AvatarPawn, const FVector& BlinkDirection, const FBmrCell& PlayerCell) const
 {
 	/* 
 	 * Corner sweep: a very small sweep along the start of the blink ray that samples slightly to both sides of it
@@ -152,7 +152,7 @@ FBmrCell USbBlinkAbility::FindBlinkTargetCell(const ABmrPawn* AvatarPawn, const 
 	FBmrCell TargetCell = FBmrCell::InvalidCell;
 	
 	// Corners are checked first, so squeezing through a corner takes priority over the normal search below
-	TargetCell = FindCornerBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
+	TargetCell = FindCornerBlinkTargetCell(AvatarPawn, BlinkDirection, PlayerCell);
 	const bool bFoundCornerTarget = TargetCell.IsValid();
 	
 	// Tracks whether an obstacle was encountered while looking for a valid cell. This matters for finding the target cell
@@ -192,13 +192,13 @@ FBmrCell USbBlinkAbility::FindBlinkTargetCell(const ABmrPawn* AvatarPawn, const 
 	// If there were no obstacles, blink to the edge cell in that direction
 	if (!TargetCell.IsValid() && !bEncounteredObstacle)
 	{
-		TargetCell = FindFarthestValidBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
+		TargetCell = FindFarthestValidBlinkTargetCell(AvatarPawn, BlinkDirection, PlayerCell);
 	}
 	
 	// If there is no free cell after an encountered obstacle (obstacle is at the edge of the map), blink to the free cell right before the obstacle
 	if (!TargetCell.IsValid() && bEncounteredObstacle)
 	{
-		TargetCell = FindFarthestValidBlinkCell(AvatarPawn, BlinkDirection, PlayerCell);
+		TargetCell = FindFarthestValidBlinkTargetCell(AvatarPawn, BlinkDirection, PlayerCell);
 	}
 	
 	// If the normal search would only move the player a single cell and not over an obstacle, 
@@ -209,7 +209,7 @@ FBmrCell USbBlinkAbility::FindBlinkTargetCell(const ABmrPawn* AvatarPawn, const 
 		&& USbDataAsset::Get().ShouldBlinkUseTileFallback())
 	{
 		// If a nearby free cell is not found, the single blink range target cell stays
-		const FBmrCell NearbyCell = FindNearbyBlinkCell(PlayerCell, BlinkDirection, TargetCell);
+		const FBmrCell NearbyCell = FindNearbyBlinkTargetCell(PlayerCell, BlinkDirection, TargetCell);
 		if (NearbyCell.IsValid())
 		{
 			TargetCell = NearbyCell;
@@ -220,7 +220,7 @@ FBmrCell USbBlinkAbility::FindBlinkTargetCell(const ABmrPawn* AvatarPawn, const 
 }
 
 // Finds a free cell near the player around the blink direction that is closest to the given target cell
-FBmrCell USbBlinkAbility::FindNearbyBlinkCell(const FBmrCell& PlayerCell, const FVector& BlinkDirection, const FBmrCell& TargetCell) const
+FBmrCell USbBlinkAbility::FindNearbyBlinkTargetCell(const FBmrCell& PlayerCell, const FVector& BlinkDirection, const FBmrCell& TargetCell) const
 {
 	FBmrCell NearbyCell = FBmrCell::InvalidCell;
 	double BestDistanceSquared = TNumericLimits<double>::Max();
