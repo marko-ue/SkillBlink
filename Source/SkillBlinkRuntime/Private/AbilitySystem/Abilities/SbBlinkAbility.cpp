@@ -17,6 +17,7 @@
 #include "GameplayCueManager.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraSystem.h"
+#include "TimerManager.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SbBlinkAbility)
 
